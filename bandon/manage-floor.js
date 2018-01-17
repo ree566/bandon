@@ -1,0 +1,4 @@
+/*! bandon 2014-08-08 */
+
+!function(){function a(){$(".nav-tabs a").each(function(){$(this).click(function(){$(this).tab("show")})}),$(".add-floor").click(function(){return $(".floor-list").append('<tr data-uid="0" class="floor"><td><input type="checkbox" class="delete-check"></td><td>0</td><td><input type="text" value="" class="floor-name form-control" placeholder="輸入名稱"></td><td><input type="checkbox" class="floor-open"></td></tr>'),!1}),$(".submit").click(function(){function a(){alert("儲存成功！"),location.replace("manage-floor.php")}function b(){alert("發生錯誤！")}var c=[];$(".floor").each(function(){c.push({id:$(this).data("uid"),name:$(".floor-name",this).val(),"delete":$(".delete-check",this).prop("checked"),open:$(".floor-open",this).is(":checked")})});var d={floors:c};return myPost("set-floors",d,a,b,this),!1})}document.addEventListener("DOMContentLoaded",a,!1)}();
+//# sourceMappingURL=manage-floor.js.map
