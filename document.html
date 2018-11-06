@@ -1,0 +1,208 @@
+<!DOCTYPE  html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    
+    <title>doc</title>
+    <style>
+      /*github.com style (c) Vasily Polovnyov <vast@whiteants.net>*/
+      pre code {
+        display: block; padding: 0.5em;
+        color: #333;
+        background: #f8f8ff
+      }
+      pre .comment,
+      pre .template_comment,
+      pre .diff .header,
+      pre .javadoc {
+        color: #998;
+        font-style: italic
+      }
+      pre .keyword,
+      pre .css .rule .keyword,
+      pre .winutils,
+      pre .javascript .title,
+      pre .nginx .title,
+      pre .subst,
+      pre .request,
+      pre .status {
+        color: #333;
+        font-weight: bold
+      }
+      pre .number,
+      pre .hexcolor,
+      pre .ruby .constant {
+        color: #099;
+      }
+      pre .string,
+      pre .tag .value,
+      pre .phpdoc,
+      pre .tex .formula {
+        color: #d14
+      }
+      pre .title,
+      pre .id {
+        color: #900;
+        font-weight: bold
+      }
+      pre .javascript .title,
+      pre .lisp .title,
+      pre .clojure .title,
+      pre .subst {
+        font-weight: normal
+      }
+      pre .class .title,
+      pre .haskell .type,
+      pre .vhdl .literal,
+      pre .tex .command {
+        color: #458;
+        font-weight: bold
+      }
+      pre .tag,
+      pre .tag .title,
+      pre .rules .property,
+      pre .django .tag .keyword {
+        color: #000080;
+        font-weight: normal
+      }
+      pre .attribute,
+      pre .variable,
+      pre .lisp .body {
+        color: #008080
+      }
+      pre .regexp {
+        color: #009926
+      }
+      pre .class {
+        color: #458;
+        font-weight: bold
+      }
+      pre .symbol,
+      pre .ruby .symbol .string,
+      pre .lisp .keyword,
+      pre .tex .special,
+      pre .prompt {
+        color: #990073
+      }
+      pre .built_in,
+      pre .lisp .title,
+      pre .clojure .built_in {
+        color: #0086b3
+      }
+      pre .preprocessor,
+      pre .pi,
+      pre .doctype,
+      pre .shebang,
+      pre .cdata {
+        color: #999;
+        font-weight: bold
+      }
+      pre .deletion {
+        background: #fdd
+      }
+      pre .addition {
+        background: #dfd
+      }
+      pre .diff .change {
+        background: #0086b3
+      }
+      pre .chunk {
+        color: #aaa
+      }
+    </style>
+  </head>
+  <body>  
+    <h1 id="-">便當系統使用手冊</h1>
+<ul>
+<li>此系統不支援 IE8 瀏覽器</li>
+</ul>
+<h2 id="-">登入</h2>
+<p>密碼預設和工號相同，登入後可點右上方 <img src="images/btn-change-pass.png" alt=""> 修改密碼。</p>
+<h2 id="-">點餐</h2>
+<p>登入後導向的頁面，也是一般使用者主要的操作頁面。</p>
+<p><img src="images/page-order.png" alt=""></p>
+<p>選擇項目種類與細項後點 <img src="images/btn-add-order.png" alt=""> 即可加入右方的訂單。在右方訂單點 <img src="images/btn-delete-order.png" alt=""> 即可移除。</p>
+<p>選擇完畢，點 <img src="images/submit-order.png" alt=""> 即可儲存。</p>
+<h2 id="-">使用者管理</h2>
+<p>此功能要求管理員權限。</p>
+<p><img src="images/btn-control.png" alt="">
+<img src="images/btn-manage-user.png" alt=""></p>
+<h3 id="-">加入使用者</h3>
+<p><img src="images/btn-add-user.png" alt=""></p>
+<p>在文字欄輸入以下格式</p>
+<pre><code>工號 姓名 權限 樓層</code></pre>
+<p>按 <img src="images/submit-add-user.png" alt=""> 即可匯入。</p>
+<ul>
+<li>權限與樓層是選填。</li>
+<li>一般管理員只能匯入相同樓層的使用者，總管理員可以隨意指定樓層。</li>
+<li>無法匯入權限比自己高的使用者。</li>
+</ul>
+<h3 id="-">變更使用者資料</h3>
+<p>和加入使用者相同，重新匯入會變更使用者名稱、權限；總管理員可以變更樓層。</p>
+<h3 id="-">刪除使用者</h3>
+<p><img src="images/btn-delete-user.png" alt=""></p>
+<p>此列表會列出所屬樓層的所有使用者；總管理員可以列出全部使用者。將勾選框勾選後點 <img src="images/submit-delete-user.png" alt=""> 即可刪除。</p>
+<ul>
+<li>無法刪除權限比自己高的使用者</li>
+</ul>
+<h2 id="-">店家管理</h2>
+<p>此功能要求管理員權限。</p>
+<p><img src="images/btn-control.png" alt="">
+<img src="images/btn-manage-group.png" alt=""></p>
+<h3 id="-">加入店家</h3>
+<p>在店家列表下輸入名稱後點 <img src="images/btn-add-group.png" alt=""> 即可新增。</p>
+<h3 id="-">變更店家資料</h3>
+<p>在左側店家列表選擇店家後，可以在右邊編輯店名和菜單項目。</p>
+<ul>
+<li>若是有某樓層在使用此店家菜單，會無法編輯。</li>
+</ul>
+<h4 id="-">編輯項目</h4>
+<p><img src="images/page-manage-group.png" alt=""></p>
+<ul>
+<li>文字欄依序填入 <code>項目名稱 種類名稱 價格</code></li>
+<li>一個項目若只包含一個種類，可以不填種類名稱。</li>
+<li>一個項目必定包含一個種類。若把單項底下的種類全數勾選刪除，儲存後會留下一個零元的空種類。</li>
+<li>還未儲存即離開頁面會造成資料遺失。包括關閉視窗、切換到其它店家、編輯細項等等。</li>
+</ul>
+<h4 id="-">編輯細項</h4>
+<p><img src="images/page-manage-detail.png" alt=""></p>
+<p>細項可以指定各項目底下的多擇一小項目 <img src="images/page-detail-select.png" alt=""> 。</p>
+<ul>
+<li>文字欄依序填入 <code>細項名稱 以逗號隔開的多擇一選項 價格</code></li>
+<li>底下的表格設定細項與項目關聯，將細項附屬在項目上。</li>
+</ul>
+<h3 id="-">刪除店家</h3>
+<p>在編輯項目頁面，將店名右方的 <img src="images/checkbox-delete-group.png" alt=""> 勾選，儲存後即會刪除。</p>
+<h2 id="-">匯入菜單</h2>
+<p><img src="images/btn-select-group.png" alt=""></p>
+<p>店家菜單是由所有管理者共同編輯的，在還未匯入前並不會顯示給一般使用者，匯入後才可使用。此功能需要管理員權限。</p>
+<p><img src="images/page-select-group.png" alt=""></p>
+<p>此頁面分為兩側，左側為所有的店家列表，右側為自己樓層匯入的菜單。在列表中選擇好店家後，點擊中央的箭頭按鈕即可匯入和匯出。匯入好菜單後點「儲存」，使用者就可以在點餐畫面上看到了。</p>
+<ul>
+<li>只有在關閉訂購時可以變更匯入的菜單。</li>
+</ul>
+<h2 id="-">開放與關閉訂購</h2>
+<p><img src="images/btn-start.png" alt="">
+<img src="images/btn-end.png" alt=""></p>
+<p>當自己樓層開放訂購時，所有的使用者都可以在訂購頁面選訂此樓層的菜單；關閉訂購時則否。</p>
+<p>建議在統計資料前關閉訂購並列印資料。在重新開啟訂購前清空資料並重新匯入菜單。</p>
+<h2 id="-">統計結果</h2>
+<p>此為管理員進入管理頁面時顯示的資料。</p>
+<h3 id="-">各店家統計結果</h3>
+<p>將訂單依店家分開統計，與店家打電話訂餐時可參考此表格。</p>
+<h3 id="-">每人支付統計</h3>
+<p>將訂單依使用者分開統計價格，收錢時可參考此表格。</p>
+<h3 id="-">所有訂單</h3>
+<p>所有訂單的詳細資料。</p>
+<h2 id="-">設定樓層</h2>
+<p><img src="images/btn-manage-floor.png" alt=""></p>
+<p>此功能要求<strong>總管理員</strong>權限。</p>
+<p><img src="images/page-manage-floor.png" alt=""></p>
+<p>此頁面可以管理所有樓層，包括增加與刪除、修改名稱、開放與關閉訂購。
+修改後點儲存按鈕即可。</p>
+<ul>
+<li>刪除樓層時，若有使用者屬於該樓層，則刪除失敗。</li>
+</ul>
+
+  </body>
+</html>
