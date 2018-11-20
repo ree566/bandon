@@ -11,19 +11,9 @@ require_once "module/operator_func.php";
 
 $sign = 0;
 
-$MYSQLI = dbc();
-//$sqlStr = [
-//    "Update `floors` set `open` = $sign where id = 1",
-//    "Update `floosrs` set `open` = $sign where id = 2",
-//    "Update `floors` set `open` = $sign where id = 3"
-//];
-//$re = Q2(...$sqlStr);
+$PDO = dbc();
 
-$re = Q2(
-    "Update `floors` set `open` = $sign where id = 1",
-    "Update `floors` set `open` = $sign where id = 2",
-    "Update `floors` set `open` = $sign where id = 3"
-);
+$row = get_user('root', false, false);
 
 
-echo print_r($re);
+echo print_r($row);

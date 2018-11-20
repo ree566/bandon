@@ -6,84 +6,72 @@ function is_true($dict, $key)
 
 function last_id()
 {
-    global $MYSQLI;
-    return $MYSQLI->insert_id;
+    global $PDO;
+    return $PDO->lastInsertId();
 }
 
 function escape($s)
 {
-    global $MYSQLI;
-    return $MYSQLI->escape_string($s);
+    return $s;
+//    global $PDO;
+//    return $PDO->escape_string($s);
 }
 
-function Q($q)
+function query($q)
 {
-    global $MYSQLI;
-    $re = $MYSQLI->query($q);
-    if ($re === true) {
-        return $MYSQLI->affected_rows;
-    }
+    global $PDO;
+    $stmt = $PDO->prepare($q);
+    $stmt->execute();
+    return $stmt;
+}
 
-    return $re;
+function update($q)
+{
+    global $PDO;
+    $re = $PDO->query($q);
+    return $re->rowCount();
 }
 
 function Q2(String...$q)
 {
-    global $MYSQLI;
-    try {
-        $MYSQLI->autocommit(false);
-        foreach ($q as $query) {
-            $re = $MYSQLI->query($query);
-            if ($re == false) {
-                throw new Exception($MYSQLI->error);
-            }
-        }
-        $MYSQLI->commit();
-        return 1;
-    } catch (Exception $ex) {
-        echo($ex);
-        $MYSQLI->rollback();
-    } finally {
-        $MYSQLI->close();
-    }
+//    global $PDO;
+//    try {
+//        $PDO->autocommit(false);
+//        foreach ($q as $query) {
+//            $re = $PDO->query($query);
+//            if ($re == false) {
+//                throw new Exception($PDO->error);
+//            }
+//        }
+//        $PDO->commit();
+//        return 1;
+//    } catch (Exception $ex) {
+//        echo($ex);
+//        $PDO->rollback();
+//    } finally {
+//        $PDO->close();
+//    }
 }
 
 function get_row($q)
 {
-    $row = null;
-
-    if ($re = Q($q)) {
-        $row = $re->fetch_assoc();
-        $re->close();
-    }
-
-    return $row;
+    $stmt = query($q);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
 function get_rows($q)
 {
-    $rows = array();
-
-    if ($re = Q($q)) {
-        while ($row = $re->fetch_assoc()) {
-            $rows[] = $row;
-        }
-        $re->close();
-    }
-
-    return $rows;
+    $stmt = query($q);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 function set_state($json)
 {
-    global $MYSQLI;
+    global $PDO;
     if (isset($json["state"])) {
         return $json;
-    } else if (!isset($MYSQLI)) {
+    } else if (!isset($PDO)) {
         $json["state"] = "error";
-    } else if ($MYSQLI->error) {
-        $json["state"] = "error";
-        $json["error"] = $MYSQLI->error;
     } else {
         $json["state"] = "success";
     }
@@ -339,7 +327,7 @@ function get_users($floor_id = null)
 function set_orders($json)
 {
     $user_id = escape($_SESSION["uid"]);
-    Q("DELETE orders FROM orders, floors WHERE orders.user_id = '$user_id' && orders.floor_id = floors.id && floors.open = 1");
+    update("DELETE orders FROM orders, floors WHERE orders.user_id = '$user_id' && orders.floor_id = floors.id && floors.open = 1");
 
     foreach ($json["orders"] as $order) {
         $floor_id = (int)$order["floor"]["id"];
@@ -373,7 +361,7 @@ function set_orders($json)
             $option_id = (int)$option["id"];
 
             // check item-detail-option
-            if (!Q("SELECT * FROM items, details, options, item_detail WHERE items.id = $item_id && options.id = $option_id &&
+            if (!get_row("SELECT * FROM items, details, options, item_detail WHERE items.id = $item_id && options.id = $option_id &&
 					options.detail_id = details.id && item_detail.item_id = items.id && item_detail.detail_id = details.id ")) {
                 continue;
             }
@@ -381,7 +369,7 @@ function set_orders($json)
         }
         $option_ids = escape(implode(",", $option_ids));
 
-        Q("INSERT INTO orders (user_id, floor_id, item_id, kind_id, option_ids, number) VALUES ('$user_id', $floor_id, $item_id, $kind_id, '$option_ids', $number)");
+        update("INSERT INTO orders (user_id, floor_id, item_id, kind_id, option_ids, number) VALUES ('$user_id', $floor_id, $item_id, $kind_id, '$option_ids', $number)");
     }
 
     $json["orders"] = get_orders($user_id);
@@ -405,7 +393,7 @@ function set_user($json)
         $json["error"] = "舊密碼錯誤！";
         $json["state"] = "fail";
     } else {
-        Q("UPDATE users SET pass_hash='$new_hash' WHERE id = '$user_id'");
+        update("UPDATE users SET pass_hash='$new_hash' WHERE id = '$user_id'");
     }
 
     return $json;
@@ -421,7 +409,7 @@ function set_group($json)
         $json["state"] = "fail";
         $json["error"] = "此菜單使用中，無法編輯";
     } else {
-        Q("INSERT INTO groups (id, name) VALUES ($group_id, '$group_name')
+        update("INSERT INTO groups (id, name) VALUES ($group_id, '$group_name')
 			ON DUPLICATE KEY UPDATE name='$group_name', tel='$group_tel'");
 
         if (!$group_id) {
@@ -429,14 +417,14 @@ function set_group($json)
         }
 
         if (is_true($json["group"], "delete")) {
-            Q("DELETE FROM groups WHERE groups.id = $group_id");
+            update("DELETE FROM groups WHERE groups.id = $group_id");
         } else {
             if (isset($json["group"]["items"])) {
                 foreach ($json["group"]["items"] as &$item) {
                     $item_id = (int)$item["id"];
                     $item_name = escape($item["name"]);
 
-                    Q("INSERT INTO items (id, group_id, name) VALUES ($item_id, $group_id, '$item_name')
+                    update("INSERT INTO items (id, group_id, name) VALUES ($item_id, $group_id, '$item_name')
 						ON DUPLICATE KEY UPDATE name='$item_name'");
 
                     if (!$item_id) {
@@ -444,14 +432,14 @@ function set_group($json)
                     }
 
                     if (is_true($item, "delete")) {
-                        Q("DELETE FROM items WHERE items.id = $item_id");
+                        update("DELETE FROM items WHERE items.id = $item_id");
                     } else {
                         foreach ($item["kinds"] as &$kind) {
                             $kind_id = (int)$kind["id"];
                             $kind_name = escape($kind["name"]);
                             $kind_price = (int)$kind["price"];
 
-                            Q("INSERT INTO kinds (id, item_id, name, price) VALUES ($kind_id, $item_id, '$kind_name', $kind_price)
+                            update("INSERT INTO kinds (id, item_id, name, price) VALUES ($kind_id, $item_id, '$kind_name', $kind_price)
 								ON DUPLICATE KEY UPDATE name='$kind_name', price=$kind_price");
 
                             if (!$kind_id) {
@@ -459,13 +447,13 @@ function set_group($json)
                             }
 
                             if (is_true($kind, "delete")) {
-                                Q("DELETE FROM kinds WHERE kinds.id = $kind_id");
+                                update("DELETE FROM kinds WHERE kinds.id = $kind_id");
                             }
                         }
 
                         // check item has at least 1 kind
                         if (!get_row("SELECT * FROM kinds WHERE kinds.item_id = $item_id")) {
-                            Q("INSERT INTO kinds (item_id) VALUES ($item_id)");
+                            update("INSERT INTO kinds (item_id) VALUES ($item_id)");
                         }
                     }
                 }
@@ -477,7 +465,7 @@ function set_group($json)
                     $detail_name = escape($detail["name"]);
                     $detail_price = (int)$detail["price"];
 
-                    Q("INSERT INTO details (id, group_id, name, price) VALUES ($detail_id, $group_id, '$detail_name', $detail_price)
+                    update("INSERT INTO details (id, group_id, name, price) VALUES ($detail_id, $group_id, '$detail_name', $detail_price)
 						ON DUPLICATE KEY UPDATE name='$detail_name', price=$detail_price");
 
                     if (!$detail_id) {
@@ -485,18 +473,18 @@ function set_group($json)
                     }
 
                     if (is_true($detail, "delete")) {
-                        Q("DELETE FROM details WHERE details.id = $detail_id");
+                        update("DELETE FROM details WHERE details.id = $detail_id");
                     } else {
                         foreach ($detail["options"] as &$option) {
                             $option_id = (int)$option["id"];
 
                             if (is_true($option, "delete")) {
-                                Q("DELETE FROM options WHERE options.id = $option_id");
+                                update("DELETE FROM options WHERE options.id = $option_id");
                                 continue;
                             }
 
                             $option_name = escape($option["name"]);
-                            Q("INSERT INTO options (id, detail_id, name) VALUES ($option_id, $detail_id, '$option_name')
+                            update("INSERT INTO options (id, detail_id, name) VALUES ($option_id, $detail_id, '$option_name')
 								ON DUPLICATE KEY UPDATE name='$option_name'");
 
                             if (!$option_id) {
@@ -508,22 +496,22 @@ function set_group($json)
             }
 
             if (isset($json["group"]["item_detail"])) {
-                Q("DELETE item_detail FROM item_detail, details WHERE details.group_id = $group_id && details.id = item_detail.detail_id");
+                update("DELETE item_detail FROM item_detail, details WHERE details.group_id = $group_id && details.id = item_detail.detail_id");
                 foreach ($json["group"]["item_detail"] as &$item_detail) {
                     $item_id = (int)$item_detail["item_id"];
                     $detail_id = (int)$item_detail["detail_id"];
 
                     // check item-group
-                    if (!Q("SELECT * FROM items WHERE items.id = $item_id && items.group_id = $group_id")) {
+                    if (!get_row("SELECT * FROM items WHERE items.id = $item_id && items.group_id = $group_id")) {
                         continue;
                     }
 
                     // check detail-group
-                    if (!Q("SELECT * FROM details WHERE details.id = $detail_id && details.group_id = $group_id")) {
+                    if (!get_row("SELECT * FROM details WHERE details.id = $detail_id && details.group_id = $group_id")) {
                         continue;
                     }
 
-                    Q("INSERT INTO item_detail (item_id, detail_id) VALUES ($item_id, $detail_id)");
+                    update("INSERT INTO item_detail (item_id, detail_id) VALUES ($item_id, $detail_id)");
                 }
             }
         }
@@ -550,9 +538,9 @@ function set_users($json)
 
         if (is_true($user, "delete")) {
             if ($_SESSION["permission"] < 3) {
-                Q("DELETE FROM users WHERE users.id = '$user_id' && users.floor_id = $my_floor_id && users.permission <= $my_permission");
+                update("DELETE FROM users WHERE users.id = '$user_id' && users.floor_id = $my_floor_id && users.permission <= $my_permission");
             } else {
-                Q("DELETE FROM users WHERE users.id = '$user_id' && users.permission <= $my_permission");
+                update("DELETE FROM users WHERE users.id = '$user_id' && users.permission <= $my_permission");
             }
         } else {
             $floor_id = (int)$user["floor_id"];
@@ -569,12 +557,12 @@ function set_users($json)
             }
 
             if ($_SESSION["permission"] < 3) {
-                if (!Q("INSERT INTO users (id, name, pass_hash, permission, floor_id) VALUES ('$user_id', '$user_name', '$user_hash', $user_permission, $floor_id)")) {
-                    Q("UPDATE users SET name='$user_name', permission=$user_permission WHERE floor_id = $floor_id && permission <= $my_permission && id = '$user_id'");
+                if (!update("INSERT INTO users (id, name, pass_hash, permission, floor_id) VALUES ('$user_id', '$user_name', '$user_hash', $user_permission, $floor_id)")) {
+                    update("UPDATE users SET name='$user_name', permission=$user_permission WHERE floor_id = $floor_id && permission <= $my_permission && id = '$user_id'");
                 }
             } else {
-                if (!Q("INSERT INTO users (id, name, pass_hash, permission, floor_id) VALUES ('$user_id', '$user_name', '$user_hash', $user_permission, $floor_id)")) {
-                    Q("UPDATE users SET name='$user_name', permission=$user_permission, floor_id=$floor_id WHERE permission <= $my_permission && id = '$user_id'");
+                if (!update("INSERT INTO users (id, name, pass_hash, permission, floor_id) VALUES ('$user_id', '$user_name', '$user_hash', $user_permission, $floor_id)")) {
+                    update("UPDATE users SET name='$user_name', permission=$user_permission, floor_id=$floor_id WHERE permission <= $my_permission && id = '$user_id'");
                 }
             }
         }
@@ -592,11 +580,11 @@ function set_floors($json)
         $floor_name = escape($floor["name"]);
         $floor_open = (int)$floor["open"];
 
-        Q("INSERT INTO floors (id, name, open) VALUES ($floor_id, '$floor_name', $floor_open)
+        update("INSERT INTO floors (id, name, open) VALUES ($floor_id, '$floor_name', $floor_open)
 			ON DUPLICATE KEY UPDATE name='$floor_name', open=$floor_open");
 
         if (is_true($floor, "delete")) {
-            Q("DELETE FROM floors WHERE floors.id = $floor_id");
+            update("DELETE FROM floors WHERE floors.id = $floor_id");
         }
     }
 
@@ -615,11 +603,11 @@ function set_floor($json)
 
     if (get_row("SELECT * FROM floors WHERE floors.id = $floor_id && floors.open = 0")) {
 
-        Q("DELETE FROM floor_group WHERE floor_id = $floor_id");
+        update("DELETE FROM floor_group WHERE floor_id = $floor_id");
         foreach ($json["floor"]["groups"] as $group) {
             $group_id = (int)$group["id"];
 
-            Q("INSERT INTO floor_group (floor_id, group_id) VALUES ($floor_id, $group_id)");
+            update("INSERT INTO floor_group (floor_id, group_id) VALUES ($floor_id, $group_id)");
         }
 
         $json["floor"] = get_floor($floor_id, true);
@@ -640,7 +628,7 @@ function set_detail($json)
     $group_id = (int)$json["detail"]["group_id"];
 
     if (!get_row("SELECT * FROM floor_group WHERE floor_group.group_id = $group_id")) {
-        Q("INSERT INTO details (id, name, price, group_id) VALUES ($detail_id, '$name', $price, $group_id)
+        update("INSERT INTO details (id, name, price, group_id) VALUES ($detail_id, '$name', $price, $group_id)
 			ON DUPLICATE KEY UPDATE name='$name', price=$price");
     } else {
         $json["state"] = "error";
@@ -661,3 +649,12 @@ function get_items_hot($number)
     return get_rows("SELECT items.name, orders.item_id, SUM(orders.number) AS count FROM orders, items WHERE items.id = orders.item_id && orders.floor_id = $floor_id GROUP BY orders.item_id ORDER BY count DESC LIMIT $number");
 }
 
+function start_order($floor_id)
+{
+    update("UPDATE floors SET `open` = 1 WHERE id = $floor_id");
+}
+
+function end_order($floor_id)
+{
+    update("UPDATE floors SET `open` = 0 WHERE id = $floor_id");
+}

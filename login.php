@@ -3,18 +3,19 @@ session_start();
 
 if(isset($_POST["uid"], $_POST["pwd"])){
 	require_once "module/dbc.php";
-	$mysqli = dbc();
+    require_once "module/operator_func.php";
+    $PDO = dbc();
 	
-	$uid = $mysqli->escape_string($_POST["uid"]);
-	$pwd = $mysqli->escape_string($_POST["pwd"]);
+	$uid = $_POST["uid"];
+	$pwd = $_POST["pwd"];
 	$pass_hash = pw_hash($pwd);
-	$re = $mysqli->query("SELECT * FROM users WHERE id = '$uid' && pass_hash = '$pass_hash'");
-	if($re && $row = $re->fetch_assoc()){
+	$user = get_user($uid, false, false);
+	if($user["pass_hash"] == $pass_hash){
 		// Login success
 		$_SESSION["uid"] = $uid;
-		$_SESSION["name"] = $row["name"];
-		$_SESSION["permission"] = (int)$row["permission"];
-		$_SESSION["floor_id"] = (int)$row["floor_id"];
+		$_SESSION["name"] = $user["name"];
+		$_SESSION["permission"] = (int)$user["permission"];
+		$_SESSION["floor_id"] = (int)$user["floor_id"];
 		
 		// $re = $mysqli->query("SELECT * FROM orders WHERE user_id = '$uid'");
 

@@ -3,11 +3,10 @@ $PERMISSION = 2;
 include("module/session.php");
 
 require_once("module/dbc.php");
+require_once("module/operator_func.php");
 
-$mysqli = dbc();
+$PDO = dbc();
 $floor_id = $_SESSION["floor_id"];
-$mysqli->query("UPDATE floors SET open=1 WHERE id = $floor_id");
-$mysqli->close();
+start_order($floor_id);
 
 header("Location: control.php");
-?>

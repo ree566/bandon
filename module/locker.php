@@ -1,18 +1,16 @@
 <?php
 require_once("module/dbc.php");
+require_once("module/operator_func.php");
 
-$mysqli = dbc();
+$PDO = dbc();
+
 $floor_id = $_SESSION["floor_id"];
-if($re = $mysqli->query("SELECT * FROM floors WHERE id = $floor_id && open = 1")){
-	if($re->num_rows){
-		$LOCKER = false;
-	}
-	$re->close();
-}
+$floor = get_floor($floor_id);
+
+$LOCKER = $floor["open"] == 0;
 
 if(!isset($LOCKER)){
 	$LOCKER = true;
 }
 
-$mysqli->close();
 

@@ -14,15 +14,12 @@
 	
 	<?php
 		require_once("module/dbc.php");
+        require_once("module/operator_func.php");
 
-		$mysqli = dbc();
 		$floor_id = $_SESSION["floor_id"];
-		$floor_name = null;
-		if($re = $mysqli->query("SELECT * FROM floors WHERE floors.id = $floor_id")){
-			$floor_name = $re->fetch_assoc()["name"];
-			$re->close();
-		}
-		$mysqli->close();
+        $floor = get_floor($floor_id);
+		$floor_name = array_key_exists("name", $floor) ? $floor["name"] : 'Error!!';
+
 		echo $floor_name;
 	?>
 		

@@ -42,19 +42,11 @@ function dbc(){
 	// return $connect;
 	
 	# please define them
-	
-	$mysqli = new mysqli($DB_SERV, $DB_USER, $DB_PASS, $DB_NAME);
-	if ($mysqli->connect_errno){
-		// connect failed
-		return false;
-	}
-	
-	if(!$mysqli->set_charset("utf8")){
-		// set charset failed
-		return false;
-	}
-	
-	return $mysqli;
+
+    $dsn = "mysql:dbname=$DB_NAME;host=$DB_SERV;charset=utf8";
+    $dbh = new PDO($dsn, $DB_USER, $DB_PASS);
+
+	return $dbh;
 	
 }
 
