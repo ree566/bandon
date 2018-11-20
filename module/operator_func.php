@@ -32,25 +32,22 @@ function update($q)
     return $re->rowCount();
 }
 
-function Q2(String...$q)
+function batchUpdate(String...$q)
 {
-//    global $PDO;
-//    try {
-//        $PDO->autocommit(false);
-//        foreach ($q as $query) {
-//            $re = $PDO->query($query);
-//            if ($re == false) {
-//                throw new Exception($PDO->error);
-//            }
-//        }
-//        $PDO->commit();
-//        return 1;
-//    } catch (Exception $ex) {
-//        echo($ex);
-//        $PDO->rollback();
-//    } finally {
-//        $PDO->close();
-//    }
+    global $PDO;
+    try {
+        $PDO->beginTransaction();
+        foreach ($q as $query) {
+            if($PDO->query($query) == false){
+                throw new Exception($PDO->errorInfo()[2]);
+            }
+        }
+        $PDO->commit();
+        return 1;
+    } catch (Exception $ex) {
+        echo($ex->getMessage());
+        $PDO->rollback();
+    }
 }
 
 function get_row($q)
@@ -329,6 +326,8 @@ function set_orders($json)
     $user_id = escape($_SESSION["uid"]);
     update("DELETE orders FROM orders, floors WHERE orders.user_id = '$user_id' && orders.floor_id = floors.id && floors.open = 1");
 
+    $sqlQuery = array();
+
     foreach ($json["orders"] as $order) {
         $floor_id = (int)$order["floor"]["id"];
         $item_id = (int)$order["item"]["id"];
@@ -369,8 +368,10 @@ function set_orders($json)
         }
         $option_ids = escape(implode(",", $option_ids));
 
-        update("INSERT INTO orders (user_id, floor_id, item_id, kind_id, option_ids, number) VALUES ('$user_id', $floor_id, $item_id, $kind_id, '$option_ids', $number)");
+        //Add query add batch update in one transaction
+        array_push($sqlQuery, "INSERT INTO orders (user_id, floor_id, item_id, kind_id, option_ids, number) VALUES ('$user_id', $floor_id, $item_id, $kind_id, '$option_ids', $number)");
     }
+    batchUpdate(...$sqlQuery);
 
     $json["orders"] = get_orders($user_id);
     return $json;
@@ -404,6 +405,8 @@ function set_group($json)
     $group_id = (int)$json["group"]["id"];
     $group_name = escape($json["group"]["name"]);
     @$group_tel = escape($json["group"]["tel"]);
+
+
 
     if ($group_id && get_row("SELECT * FROM floor_group WHERE group_id = $group_id")) {
         $json["state"] = "fail";

@@ -13,7 +13,15 @@ $sign = 0;
 
 $PDO = dbc();
 
-$row = get_user('root', false, false);
+$sql = [
+    "update floors set open = $sign where id = 1",
+    "update floors set open = $sign where id = 2",
+    "update floors set open = $sign where id = 3"
+];
+
+$re = batchUpdate(
+    ...$sql
+);
 
 
-echo print_r($row);
+echo print_r($re);
