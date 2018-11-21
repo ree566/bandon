@@ -38,7 +38,7 @@ function batchUpdate(String...$q)
     try {
         $PDO->beginTransaction();
         foreach ($q as $query) {
-            if($PDO->query($query) == false){
+            if ($PDO->query($query) == false) {
                 throw new Exception($PDO->errorInfo()[2]);
             }
         }
@@ -207,12 +207,23 @@ function get_orders($user_id = null, $floor_id = null)
 
     if ($user_id) {
         $user_id = escape($user_id);
-        $orders = get_rows("SELECT * FROM orders WHERE user_id = '$user_id'");
+        $orders = get_rows("select o.id, o.user_id, o.createDate, od.option_ids, od.kind_id, od.number, u.floor_id, k.item_id 
+        from orders o join order_detail od on o.id = od.order_id 
+        join users u on o.user_id = u.id 
+        join kinds k on od.kind_id = k.id 
+        WHERE o.user_id = '$user_id'");
     } else if ($floor_id) {
         $floor_id = (int)$floor_id;
-        $orders = get_rows("SELECT * FROM orders WHERE floor_id = $floor_id");
+        $orders = get_rows("select o.id, o.user_id, o.createDate, od.option_ids, od.kind_id, od.number, u.floor_id, k.item_id 
+        from orders o join order_detail od on o.id = od.order_id 
+        join users u on o.user_id = u.id 
+        join kinds k on od.kind_id = k.id 
+        WHERE u.floor_id = $floor_id");
     } else {
-        $orders = get_rows("SELECT * FROM orders");
+        $orders = get_rows("select o.id, o.user_id, o.createDate, od.option_ids, od.kind_id, od.number, u.floor_id, k.item_id 
+        from orders o join order_detail od on o.id = od.order_id 
+        join users u on o.user_id = u.id 
+        join kinds k on od.kind_id = k.id");
     }
 
     foreach ($orders as &$order) {
@@ -324,7 +335,17 @@ function get_users($floor_id = null)
 function set_orders($json)
 {
     $user_id = escape($_SESSION["uid"]);
-    update("DELETE orders FROM orders, floors WHERE orders.user_id = '$user_id' && orders.floor_id = floors.id && floors.open = 1");
+    $floor_id = $json["orders"][0]["floor"]["id"];
+    $floor = get_floor($floor_id);
+    if ($floor["open"] == 0) {
+        $json["error"] = "Floor's order is not available now";
+        return false;
+    }
+
+    update("delete o from orders o where o.user_id = '$user_id'");
+    update("insert into orders(user_id) values('$user_id') ");
+
+    $order_id = last_id();
 
     $sqlQuery = array();
 
@@ -369,7 +390,7 @@ function set_orders($json)
         $option_ids = escape(implode(",", $option_ids));
 
         //Add query add batch update in one transaction
-        array_push($sqlQuery, "INSERT INTO orders (user_id, floor_id, item_id, kind_id, option_ids, number) VALUES ('$user_id', $floor_id, $item_id, $kind_id, '$option_ids', $number)");
+        array_push($sqlQuery, "INSERT INTO order_detail (order_id, kind_id, option_ids, number) VALUES ($order_id, $kind_id, '$option_ids', $number)");
     }
     batchUpdate(...$sqlQuery);
 
@@ -405,7 +426,6 @@ function set_group($json)
     $group_id = (int)$json["group"]["id"];
     $group_name = escape($json["group"]["name"]);
     @$group_tel = escape($json["group"]["tel"]);
-
 
 
     if ($group_id && get_row("SELECT * FROM floor_group WHERE group_id = $group_id")) {

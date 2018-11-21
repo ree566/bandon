@@ -19,9 +19,12 @@ $sql = [
     "update floors set open = $sign where id = 3"
 ];
 
-$re = batchUpdate(
-    ...$sql
-);
+$user_id = 'root';
+
+//update("delete o from orders o where o.user_id = '$user_id'");
+batchUpdate("insert into orders(user_id) values('$user_id') ", "insert into orders(user_id) values('$user_id') ");
+
+$id = last_id();
 
 
-echo print_r($re);
+echo print_r($id);
