@@ -337,64 +337,68 @@ function set_orders($json)
     $user_id = escape($_SESSION["uid"]);
     $floor_id = $json["orders"][0]["floor"]["id"];
     $floor = get_floor($floor_id);
-    if ($floor["open"] == 0) {
+    if ($floor == null || $floor["open"] == '0') {
+        $json["state"] = "fail";
         $json["error"] = "Floor's order is not available now";
-        return false;
-    }
+//        throw new Exception("Floor's order is not available now");
+    } else {
 
-    update("delete o from orders o where o.user_id = '$user_id'");
-    update("insert into orders(user_id) values('$user_id') ");
+        update("delete o from orders o where o.user_id = '$user_id'");
+        update("insert into orders(user_id) values('$user_id') ");
 
-    $order_id = last_id();
+        $order_id = last_id();
 
-    $sqlQuery = array();
+        $sqlQuery = array();
 
-    foreach ($json["orders"] as $order) {
-        $floor_id = (int)$order["floor"]["id"];
-        $item_id = (int)$order["item"]["id"];
-        $kind_id = (int)$order["kind"]["id"];
-        $number = (int)$order["number"];
+        foreach ($json["orders"] as $order) {
+            $floor_id = (int)$order["floor"]["id"];
+            $item_id = (int)$order["item"]["id"];
+            $kind_id = (int)$order["kind"]["id"];
+            $number = (int)$order["number"];
 
-        // check number
-        if (!$number) {
-            continue;
-        }
-
-        // check floor open
-        if (!get_row("SELECT * FROM floors WHERE floors.id = $floor_id && floors.open = 1")) {
-            continue;
-        }
-
-        // check floor-group-item
-        if (!get_row("SELECT * FROM items, groups, floor_group WHERE items.id = $item_id && items.group_id = groups.id &&
-				groups.id = floor_group.group_id && floor_group.floor_id = $floor_id")) {
-            continue;
-        }
-
-        // check item-kind
-        if (!get_row("SELECT * FROM items, kinds WHERE items.id = $item_id && kinds.id = $kind_id && kinds.item_id = items.id")) {
-            continue;
-        }
-
-        $option_ids = array();
-        foreach ($order["options"] as $option) {
-            $option_id = (int)$option["id"];
-
-            // check item-detail-option
-            if (!get_row("SELECT * FROM items, details, options, item_detail WHERE items.id = $item_id && options.id = $option_id &&
-					options.detail_id = details.id && item_detail.item_id = items.id && item_detail.detail_id = details.id ")) {
+            // check number
+            if (!$number) {
                 continue;
             }
-            $option_ids[] = $option["id"];
+
+            // check floor open
+            if (!get_row("SELECT * FROM floors WHERE floors.id = $floor_id && floors.open = 1")) {
+                continue;
+            }
+
+            // check floor-group-item
+            if (!get_row("SELECT * FROM items, groups, floor_group WHERE items.id = $item_id && items.group_id = groups.id &&
+				groups.id = floor_group.group_id && floor_group.floor_id = $floor_id")) {
+                continue;
+            }
+
+            // check item-kind
+            if (!get_row("SELECT * FROM items, kinds WHERE items.id = $item_id && kinds.id = $kind_id && kinds.item_id = items.id")) {
+                continue;
+            }
+
+            $option_ids = array();
+            foreach ($order["options"] as $option) {
+                $option_id = (int)$option["id"];
+
+                // check item-detail-option
+                if (!get_row("SELECT * FROM items, details, options, item_detail WHERE items.id = $item_id && options.id = $option_id &&
+					options.detail_id = details.id && item_detail.item_id = items.id && item_detail.detail_id = details.id ")) {
+                    continue;
+                }
+                $option_ids[] = $option["id"];
+            }
+            $option_ids = escape(implode(",", $option_ids));
+
+            //Add query add batch update in one transaction
+            array_push($sqlQuery, "INSERT INTO order_detail (order_id, kind_id, option_ids, number) VALUES ($order_id, $kind_id, '$option_ids', $number)");
         }
-        $option_ids = escape(implode(",", $option_ids));
+        batchUpdate(...$sqlQuery);
 
-        //Add query add batch update in one transaction
-        array_push($sqlQuery, "INSERT INTO order_detail (order_id, kind_id, option_ids, number) VALUES ($order_id, $kind_id, '$option_ids', $number)");
+        $json["orders"] = get_orders($user_id);
+
     }
-    batchUpdate(...$sqlQuery);
 
-    $json["orders"] = get_orders($user_id);
     return $json;
 }
 
@@ -669,7 +673,12 @@ function get_items_hot($number)
 {
     $number = (int)$number;
     $floor_id = (int)$_SESSION["floor_id"];
-    return get_rows("SELECT items.name, orders.item_id, SUM(orders.number) AS count FROM orders, items WHERE items.id = orders.item_id && orders.floor_id = $floor_id GROUP BY orders.item_id ORDER BY count DESC LIMIT $number");
+    return get_rows("SELECT i.name, i.id, SUM(od.number) AS count
+        FROM orders o join order_detail od on o.id = od.order_id
+        join kinds k on od.kind_id = k.id join items i on k.item_id = i.id
+        join users u on o.user_id = u.id
+        where u.floor_id = $floor_id
+        GROUP BY i.id ORDER BY count DESC LIMIT $number");
 }
 
 function start_order($floor_id)
@@ -680,4 +689,55 @@ function start_order($floor_id)
 function end_order($floor_id)
 {
     update("UPDATE floors SET `open` = 0 WHERE id = $floor_id");
+}
+
+function clean_order($floor_id)
+{
+    update("DELETE FROM orders WHERE floor_id = $floor_id");
+}
+
+function get_checkout_orders($floor_id){
+    return get_rows("select o.id order_id, o.user_id, u.name user_name, createDate, sum(od.number * k.price) totalPrice, p.id purse_id, p.amount balance 
+        from orders o join order_detail od on o.id = od.order_id
+        join kinds k on od.kind_id = k.id join users u on o.user_id = u.id join purses p on u.id = p.user_id
+        where u.floor_id = $floor_id
+        group by o.id, o.user_id, o.createDate, p.id, p.amount
+        order by u.id");
+}
+
+/*
+ * Update `orders` table complete sign(user's money is already check by admin)
+ * Also update money and event on `purses` and `purses_event` table
+ * These step must in a single transaction
+ * orders:{
+ *      purse_id: xx,
+ *      order_id: xx,
+ *      totalPrice: xxx,
+ *      paid: xx,
+ *      remark: remark
+ * }
+ */
+function set_checkout_orders($json)
+{
+    $floor_id = (int)$_SESSION["floor_id"];
+    $sqlStr = array();
+    array_push($sqlStr, "update orders o join users u on o.user_id = u.id
+        set o.processed = 1 where u.floor_id = $floor_id");
+
+    $orders = $json["orders"];
+
+    foreach ($orders as &$order) {
+        $purse_id = (int)$order["purse_id"];
+        $order_id = (int)$order["order_id"];
+        $totalPrice = (int)$order["totalPrice"];
+        $paid = (int)$order["paid"];
+        $remark = escape($order["remark"]);
+
+        array_push($sqlStr, "update purses set amount = (amount - $totalPrice + $paid) where id = $purse_id");
+        array_push($sqlStr, "insert into purse_event(purse_id, order_id, amount, remark) VALUES ($purse_id, $order_id, $totalPrice, '$remark')");
+
+    }
+
+    batchUpdate(...$sqlStr);
+
 }

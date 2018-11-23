@@ -1,10 +1,11 @@
 <?php
-	require_once("module/dbc.php");
-	
-	$mysqli = dbc();
-	$re = $mysqli->query("SELECT * FROM floors");
+    require_once("module/dbc.php");
+    require_once("module/operator_func.php");
+
+    $PDO = dbc();
+	$re = get_floors();
 	$floors = array();
-	while($re && $row = $re->fetch_assoc()){
+	foreach ($re as $row){
 		$floors[$row["id"]] = $row;
 	}
 

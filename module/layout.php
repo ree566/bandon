@@ -15,6 +15,8 @@
 	<script src="bootstrap/js/bootstrap.min.js"></script>
 
 	<script src="common.min.js"></script>
+    <script src="js/js.cookie.js"></script>
+
 	<script src="<?=$PAGE?>.min.js"></script>
 	<link rel="stylesheet" href="style.css">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
