@@ -28,8 +28,8 @@ function query($q)
 function update($q)
 {
     global $PDO;
-    $re = $PDO->query($q);
-    return $re->rowCount();
+    $PDO->query($q);
+    return 1;
 }
 
 function batchUpdate(String...$q)
@@ -211,19 +211,20 @@ function get_orders($user_id = null, $floor_id = null)
         from orders o join order_detail od on o.id = od.order_id 
         join users u on o.user_id = u.id 
         join kinds k on od.kind_id = k.id 
-        WHERE o.user_id = '$user_id'");
+        WHERE o.user_id = '$user_id' and o.processed = 0");
     } else if ($floor_id) {
         $floor_id = (int)$floor_id;
         $orders = get_rows("select o.id, o.user_id, o.createDate, od.option_ids, od.kind_id, od.number, u.floor_id, k.item_id 
         from orders o join order_detail od on o.id = od.order_id 
         join users u on o.user_id = u.id 
         join kinds k on od.kind_id = k.id 
-        WHERE u.floor_id = $floor_id");
+        WHERE u.floor_id = $floor_id and o.processed = 0");
     } else {
         $orders = get_rows("select o.id, o.user_id, o.createDate, od.option_ids, od.kind_id, od.number, u.floor_id, k.item_id 
         from orders o join order_detail od on o.id = od.order_id 
         join users u on o.user_id = u.id 
-        join kinds k on od.kind_id = k.id");
+        join kinds k on od.kind_id = k.id
+        where o.processed = 0");
     }
 
     foreach ($orders as &$order) {
@@ -677,7 +678,7 @@ function get_items_hot($number)
         FROM orders o join order_detail od on o.id = od.order_id
         join kinds k on od.kind_id = k.id join items i on k.item_id = i.id
         join users u on o.user_id = u.id
-        where u.floor_id = $floor_id
+        where u.floor_id = $floor_id and o.processed = 0
         GROUP BY i.id ORDER BY count DESC LIMIT $number");
 }
 
@@ -696,11 +697,12 @@ function clean_order($floor_id)
     update("DELETE FROM orders WHERE floor_id = $floor_id");
 }
 
-function get_checkout_orders($floor_id){
+function get_checkout_orders($floor_id)
+{
     return get_rows("select o.id order_id, o.user_id, u.name user_name, createDate, sum(od.number * k.price) totalPrice, p.id purse_id, p.amount balance 
         from orders o join order_detail od on o.id = od.order_id
         join kinds k on od.kind_id = k.id join users u on o.user_id = u.id join purses p on u.id = p.user_id
-        where u.floor_id = $floor_id
+        where u.floor_id = $floor_id and o.processed = 0
         group by o.id, o.user_id, o.createDate, p.id, p.amount
         order by u.id");
 }
@@ -720,6 +722,8 @@ function get_checkout_orders($floor_id){
 function set_checkout_orders($json)
 {
     $floor_id = (int)$_SESSION["floor_id"];
+    $mod_user_id = escape($_SESSION["uid"]);
+
     $sqlStr = array();
     array_push($sqlStr, "update orders o join users u on o.user_id = u.id
         set o.processed = 1 where u.floor_id = $floor_id");
@@ -731,13 +735,78 @@ function set_checkout_orders($json)
         $order_id = (int)$order["order_id"];
         $totalPrice = (int)$order["totalPrice"];
         $paid = (int)$order["paid"];
-        $remark = escape($order["remark"]);
+        $remark = isset($order["remark"]) ? escape($order["remark"]) : null;
+
+        if ($totalPrice == $paid) {
+            $remark .= "全額付清(" . $totalPrice . ")";
+        } else if ($totalPrice != 0 || $paid != 0) {
+            $remark .= "需付: " . $totalPrice . " 已付: " . $paid;
+        }
 
         array_push($sqlStr, "update purses set amount = (amount - $totalPrice + $paid) where id = $purse_id");
-        array_push($sqlStr, "insert into purse_event(purse_id, order_id, amount, remark) VALUES ($purse_id, $order_id, $totalPrice, '$remark')");
+        array_push($sqlStr, "insert into purse_event(purse_id, order_id, amount, remark, mod_user_id) 
+            VALUES ($purse_id, $order_id, ($paid - $totalPrice ), '$remark', '$mod_user_id')");
 
     }
 
     batchUpdate(...$sqlStr);
 
+}
+
+function get_purse($user_id)
+{
+    return get_row("select p.id purse_id, `user_id`, `name` user_name, amount 
+          from purses p join users u on p.user_id = u.id where u.id = '$user_id'");
+}
+
+function get_purse_event($user_id)
+{
+    return get_rows("select pe.id purse_event_id, pe.purse_id, pe.order_id, pe.amount, pe.remark, u.id mod_user_id, u.name mod_user_name, o.createDate,
+                   concat(i.name,' ',k.name) item_kind, od.number order_number, k.price kind_price, pe.createDate mod_date
+            from purse_event pe join users u on pe.mod_user_id = u.id
+                                join purses p on pe.purse_id = p.id
+                                left join orders o on pe.order_id = o.id
+                                left join order_detail od on o.id = od.order_id
+                                left join kinds k on od.kind_id = k.id
+                                left join items i on k.item_id = i.id
+            where p.user_id = '$user_id'");
+}
+
+function get_purses($floor_id = null)
+{
+
+    if ($floor_id == null) {
+        return get_rows("select p.id purse_id, user_id, name user_name, amount 
+          from purses p join users u on p.user_id = u.id");
+    } else {
+        return get_rows("select p.id purse_id, user_id, name user_name, amount 
+          from purses p join users u on p.user_id = u.id where u.floor_id = $floor_id");
+    }
+}
+
+function set_purses($json)
+{
+
+    $sqlStr = [];
+
+    $mod_user_id = escape($_SESSION["uid"]);
+
+    foreach ($json["purses"] as &$purse) {
+        $purse_id = (int)$purse["purse_id"];
+        $adjust = (int)$purse["adjust"];
+        $comment = escape($purse["remark"]);
+
+        array_push($sqlStr,
+            "insert into purse_event(purse_id, order_id, amount, remark, mod_user_id) values ($purse_id, null, $adjust, '$comment', '$mod_user_id')");
+
+        array_push($sqlStr,
+            "update purses set amount = amount + $adjust where id = $purse_id");
+    }
+
+    batchUpdate(...$sqlStr);
+
+    $floor_id = (int)$_SESSION["floor_id"];
+    $json["purses"] = get_purses($floor_id);
+
+    return $json;
 }

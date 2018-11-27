@@ -84,6 +84,11 @@ if(isset($_POST["command"])){
 		if($_POST["command"] == "get-orders"){
 			$json["orders"] = get_orders(null, $_SESSION["floor_id"]);
 		}
+
+		//order checkout
+        if($_POST["command"] == "set-checkout-orders"){
+            $json = set_checkout_orders($json);
+        }
 	}
 	
 	if($_SESSION["permission"] >= 3){
@@ -95,6 +100,10 @@ if(isset($_POST["command"])){
 		if($_POST["command"] == "set-floors"){
 			$json = set_floors($json);
 		}
+
+        if($_POST["command"] == "set-purses"){
+            $json = set_purses($json);
+        }
 	}
 }
 

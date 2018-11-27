@@ -1,15 +1,14 @@
 ﻿<?php
-$PERMISSION = 2;
+$PERMISSION = 1;
 include "module/session.php";
 include "module/locker.php";
 
 require_once "module/dbc.php";
 
 $UID = $_SESSION["uid"];
-$TITLE = "結算訂購資料";
-$PAGE = "order-checkout";
-
-$MAIN = get_include_contents("module/order-checkout-main.php");
+$TITLE = "我的錢包";
+$PAGE = "purse";
+$MAIN = get_include_contents("module/purse-main.php");
 
 include "module/layout.php";
 

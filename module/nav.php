@@ -15,10 +15,12 @@
 			<span class="navbar-left">
 			<?php if($_SESSION["permission"] >= 2){ ?>
 				<a href="control.php" class="btn btn-default navbar-btn">管理</a>
+                <a href="manage-purse.php" class="btn btn-default navbar-btn">餘額異動</a>
 			<?php } if ($_SESSION["permission"] >= 3) {?>
 				<a href="manage-floor.php" class="btn btn-default">設定樓層</a>
 			<?php } ?>
 				<a href="view.php" class="btn btn-default navbar-btn">我的點餐</a>
+                <a href="purse.php" class="btn btn-default navbar-btn">我的錢包</a>
 			</span>
 			<span class="navbar-right">
 				<a href="account.php" class="btn btn-default navbar-btn">修改密碼</a>

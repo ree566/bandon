@@ -1,7 +1,7 @@
 <h1 id="title">
 	<?=$TITLE?>
 	<small class="today-hot">
-	<?php if(isset($PERMISSION) && $PERMISSION < 2 && $PAGE != "account"){ ?>
+	<?php if(isset($PERMISSION) && $PERMISSION < 2 && $PAGE == "view"){ ?>
 		<br />
 		<span class="today-hot-head">
 			今日熱門︰

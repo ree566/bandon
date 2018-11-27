@@ -6,10 +6,9 @@ include "module/locker.php";
 require_once "module/dbc.php";
 
 $UID = $_SESSION["uid"];
-$TITLE = "結算訂購資料";
-$PAGE = "order-checkout";
-
-$MAIN = get_include_contents("module/order-checkout-main.php");
+$TITLE = "餘額異動";
+$PAGE = "manage-purse";
+$MAIN = get_include_contents("module/manage-purse-main.php");
 
 include "module/layout.php";
 
