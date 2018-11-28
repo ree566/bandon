@@ -14,8 +14,8 @@ if (isset($_COOKIE["paid_temp"])) {
     $info = json_decode($info, true);
 }
 ?>
-<?php //if ($LOCKER == false) { ?>
-<?php if (false) { ?>
+<?php if ($LOCKER == false) { ?>
+<?php //if (false) { ?>
     <div class='alert alert-danger'>請結束訂購後再進行資料結算</div>
 <?php } else { ?>
     <form method="post" class="" role="form">
@@ -42,7 +42,7 @@ if (isset($_COOKIE["paid_temp"])) {
                     <td class="user_name"><?= $order["user_name"] ?></td>
                     <td class="createDate"><?= $order["createDate"] ?></td>
                     <td class="totalPrice"><?= $order["totalPrice"] ?></td>
-                    <td class="paid"><input type="number" class="order-paid form-control" placeholder="輸入已付金額" min="0"
+                    <td class="paid"><input type="number" class="order-paid form-control" placeholder="輸入已付金額" min="0" max="2000"
                                             value="<?= isset($info['P' . $order["purse_id"]]) ? $info['P' . $order["purse_id"]] : null ?>"/>
                     </td>
                     <td class="balance">
@@ -64,5 +64,5 @@ if (isset($_COOKIE["paid_temp"])) {
         </div>
     </form>
 
-    <?php print_r( $_COOKIE ); ?>
+<!--    --><?php //print_r( $_COOKIE ); ?>
 <?php } ?>

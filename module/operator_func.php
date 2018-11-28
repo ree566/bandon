@@ -740,7 +740,7 @@ function set_checkout_orders($json)
         if ($totalPrice == $paid) {
             $remark .= "全額付清(" . $totalPrice . ")";
         } else if ($totalPrice != 0 || $paid != 0) {
-            $remark .= "需付: " . $totalPrice . " 已付: " . $paid;
+            $remark .= "(需付: " . $totalPrice . " 已付: " . $paid. ")";
         }
 
         array_push($sqlStr, "update purses set amount = (amount - $totalPrice + $paid) where id = $purse_id");
@@ -759,6 +759,7 @@ function get_purse($user_id)
           from purses p join users u on p.user_id = u.id where u.id = '$user_id'");
 }
 
+//Only show event in two days
 function get_purse_event($user_id)
 {
     return get_rows("select pe.id purse_event_id, pe.purse_id, pe.order_id, pe.amount, pe.remark, u.id mod_user_id, u.name mod_user_name, o.createDate,
@@ -769,7 +770,8 @@ function get_purse_event($user_id)
                                 left join order_detail od on o.id = od.order_id
                                 left join kinds k on od.kind_id = k.id
                                 left join items i on k.item_id = i.id
-            where p.user_id = '$user_id'");
+            where p.user_id = '$user_id'
+            and pe.createDate between CURDATE() - INTERVAL 2 DAY and CURDATE() + INTERVAL 1 DAY");
 }
 
 function get_purses($floor_id = null)
@@ -786,6 +788,17 @@ function get_purses($floor_id = null)
 
 function set_purses($json)
 {
+    $floor_id = $_SESSION["floor_id"];
+    $cnt = get_purse_mod_event_times($floor_id);
+
+    if($cnt["cnt"] > 10){
+        $json["error"] = "修改次數過多, 請明日再試". $cnt;
+        $json["state"] = "fail";
+        return $json;
+    }
+
+    $purseMin = -200;
+    $purseMax = 1500;
 
     $sqlStr = [];
 
@@ -795,6 +808,14 @@ function set_purses($json)
         $purse_id = (int)$purse["purse_id"];
         $adjust = (int)$purse["adjust"];
         $comment = escape($purse["remark"]);
+        $amount = (int)$purse["amount"];
+        $user_id = $purse["user_id"];
+
+        if ($amount + $adjust > $purseMax || $amount + $adjust < $purseMin) {
+            $json["error"] = $user_id. " 餘額不可小於". $purseMin. "或大於". $purseMax;
+            $json["state"] = "fail";
+            return $json;
+        }
 
         array_push($sqlStr,
             "insert into purse_event(purse_id, order_id, amount, remark, mod_user_id) values ($purse_id, null, $adjust, '$comment', '$mod_user_id')");
@@ -809,4 +830,12 @@ function set_purses($json)
     $json["purses"] = get_purses($floor_id);
 
     return $json;
+}
+
+function get_purse_mod_event_times($floor_id){
+    return get_row("select count(1) cnt from purse_event pe join purses p on pe.purse_id = p.id
+        join users u on p.user_id = u.id
+        where createDate between CURDATE() and CURDATE() + INTERVAL 1 DAY
+        and order_id is null
+        and u.floor_id = $floor_id");
 }

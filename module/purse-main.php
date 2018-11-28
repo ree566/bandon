@@ -5,13 +5,13 @@ require_once("module/operator_func.php");
 $PDO = dbc();
 $user_id = $_SESSION["uid"];
 $purse = get_purse($user_id);
-$purse_event = get_purse_event($user_id)
+$purse_event = get_purse_event($user_id);
 
 ?>
 <form method="post" class="" role="form">
     <h3>您的餘額: $<?= $purse["amount"] ?></h3>
     <div class="panel panel-default">
-        <div class="panel-heading">餘額異動紀錄</div>
+        <div class="panel-heading">餘額異動紀錄(僅顯示2天內)</div>
         <table class="group table text-left sortable table-striped table-hover">
             <thead>
             <tr>

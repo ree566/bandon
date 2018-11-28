@@ -29,7 +29,6 @@ include "module/locker.php";
     <?php } ?>
 
     <a href="detail.php" class="btn btn-default">檢視詳細</a>
-    <a href="manage-user.php" class="btn btn-default">管理使用者</a>
     <a href="order-checkout.php" class="btn btn-default">結算</a>
     <a href="javascript: window.print()" class="btn btn-default">列印</a>
 </div>
