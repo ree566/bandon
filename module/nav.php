@@ -1,4 +1,4 @@
-<nav class="navbar navbar-default navbar-static-top" role="navigation">
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
     <div class="container-fluid">
         <div class="navbar-header">
             <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#nav-collapse">
@@ -42,6 +42,19 @@
                 <li>
                     <a href="purse.php">我的錢包</a>
                 </li>
+                <?php if ($_SESSION["permission"] >= 2) { ?>
+                    <li>
+                        <?php if($LOCKER == true){ ?>
+                            <a href="start.php" style="color:red">
+                                <span class="glyphicon glyphicon-off" aria-hidden="true"></span>結束訂購中
+                            </a>
+                        <?php } else { ?>
+                            <a href="end.php" style="color:green">
+                                <span class="glyphicon glyphicon-off" aria-hidden="true"></span>開放訂購中
+                            </a>
+                        <?php } ?>
+                    </li>
+                <?php } ?>
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 <li>

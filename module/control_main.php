@@ -21,13 +21,6 @@ include "module/locker.php";
 <div class="btn-group">
     <a href="manage-group.php" class="btn btn-default">管理菜單</a>
     <a href="select-group.php" class="btn btn-default">匯入菜單</a>
-
-    <?php if (!$LOCKER) { ?>
-        <a href="end.php" class="btn btn-default">結束訂購</a>
-    <?php } else { ?>
-        <a href="start.php" class="btn btn-default">開放訂購</a>
-    <?php } ?>
-
     <a href="detail.php" class="btn btn-default">檢視詳細</a>
     <a href="order-checkout.php" class="btn btn-default">結算</a>
     <a href="javascript: window.print()" class="btn btn-default">列印</a>

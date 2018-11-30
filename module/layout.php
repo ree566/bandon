@@ -33,7 +33,7 @@
 
 <body>
 
-
+<div style="background-color:lightcoral;color:white; text-align: center; position: fixed; width: 100%; z-index: 50">BETA</div>
 <?php include "module/nav.php"?>
 
 <div class="container-fluid">

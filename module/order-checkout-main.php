@@ -15,9 +15,19 @@ if (isset($_COOKIE["paid_temp"])) {
 }
 ?>
 <?php if ($LOCKER == false) { ?>
-<?php //if (false) { ?>
+    <?php //if (false) { ?>
     <div class='alert alert-danger'>請結束訂購後再進行資料結算</div>
+    <div class="btn-group">
+        <a href="control.php" class="btn btn-default">返回</a>
+    </div>
 <?php } else { ?>
+    <h5>
+        <ur style="color: red">
+            <li>金額留空 = 付全額</li>
+            <li>金額為0 = 未付錢</li>
+            <li>備註為選填</li>
+        </ur>
+    </h5>
     <form method="post" class="" role="form">
         <table class="table table-hover">
             <thead>
@@ -42,7 +52,8 @@ if (isset($_COOKIE["paid_temp"])) {
                     <td class="user_name"><?= $order["user_name"] ?></td>
                     <td class="createDate"><?= $order["createDate"] ?></td>
                     <td class="totalPrice"><?= $order["totalPrice"] ?></td>
-                    <td class="paid"><input type="number" class="order-paid form-control" placeholder="輸入已付金額" min="0" max="2000"
+                    <td class="paid"><input type="number" class="order-paid form-control" placeholder="輸入已付金額" min="0"
+                                            max="2000"
                                             value="<?= isset($info['P' . $order["purse_id"]]) ? $info['P' . $order["purse_id"]] : null ?>"/>
                     </td>
                     <td class="balance">
@@ -61,8 +72,9 @@ if (isset($_COOKIE["paid_temp"])) {
             <a href="control.php" class="btn btn-default">返回</a>
             <button class="btn btn-default submit" type="button">儲存</button>
             <button class="btn btn-default reset" type="button">Reset</button>
+            <h5 style="color: red">※請務必再三確認完成再送出</h5>
         </div>
     </form>
 
-<!--    --><?php //print_r( $_COOKIE ); ?>
+<!--    --><?php //print_r($_COOKIE); ?>
 <?php } ?>

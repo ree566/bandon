@@ -207,25 +207,18 @@ function get_orders($user_id = null, $floor_id = null)
 
     if ($user_id) {
         $user_id = escape($user_id);
-        $orders = get_rows("select o.id, o.user_id, o.createDate, od.option_ids, od.kind_id, od.number, u.floor_id, k.item_id 
-        from orders o join order_detail od on o.id = od.order_id 
-        join users u on o.user_id = u.id 
-        join kinds k on od.kind_id = k.id 
-        WHERE o.user_id = '$user_id' and o.processed = 0");
     } else if ($floor_id) {
         $floor_id = (int)$floor_id;
-        $orders = get_rows("select o.id, o.user_id, o.createDate, od.option_ids, od.kind_id, od.number, u.floor_id, k.item_id 
+    }
+
+    $orders = get_rows("select o.id, o.user_id, o.createDate, od.option_ids, od.kind_id, od.number, u.floor_id, k.item_id 
         from orders o join order_detail od on o.id = od.order_id 
         join users u on o.user_id = u.id 
         join kinds k on od.kind_id = k.id 
-        WHERE u.floor_id = $floor_id and o.processed = 0");
-    } else {
-        $orders = get_rows("select o.id, o.user_id, o.createDate, od.option_ids, od.kind_id, od.number, u.floor_id, k.item_id 
-        from orders o join order_detail od on o.id = od.order_id 
-        join users u on o.user_id = u.id 
-        join kinds k on od.kind_id = k.id
-        where o.processed = 0");
-    }
+        WHERE ('$user_id' is null or '$user_id' = '' or o.user_id = '$user_id') 
+          and ('$floor_id' is null or '$floor_id' = '' or u.floor_id = '$floor_id')
+          and o.processed = 0");
+
 
     foreach ($orders as &$order) {
         $order["item"] = get_item($order["item_id"], false);
@@ -341,10 +334,9 @@ function set_orders($json)
     if ($floor == null || $floor["open"] == '0') {
         $json["state"] = "fail";
         $json["error"] = "Floor's order is not available now";
-//        throw new Exception("Floor's order is not available now");
     } else {
 
-        update("delete o from orders o where o.user_id = '$user_id'");
+        update("delete o from orders o where o.user_id = '$user_id' and processed = 0");
         update("insert into orders(user_id) values('$user_id') ");
 
         $order_id = last_id();
@@ -566,9 +558,9 @@ function set_users($json)
 
         if (is_true($user, "delete")) {
             if ($_SESSION["permission"] < 3) {
-                update("DELETE FROM users WHERE users.id = '$user_id' && users.floor_id = $my_floor_id && users.permission <= $my_permission");
+                batchUpdate("delete from purses where user_id = '$user_id'", "DELETE FROM users WHERE users.id = '$user_id' && users.floor_id = $my_floor_id && users.permission <= $my_permission");
             } else {
-                update("DELETE FROM users WHERE users.id = '$user_id' && users.permission <= $my_permission");
+                batchUpdate("delete from purses where user_id = '$user_id'", "DELETE FROM users WHERE users.id = '$user_id' && users.permission <= $my_permission");
             }
         } else {
             $floor_id = (int)$user["floor_id"];
@@ -585,11 +577,13 @@ function set_users($json)
             }
 
             if ($_SESSION["permission"] < 3) {
-                if (!update("INSERT INTO users (id, name, pass_hash, permission, floor_id) VALUES ('$user_id', '$user_name', '$user_hash', $user_permission, $floor_id)")) {
+                if (!batchUpdate("INSERT INTO users (id, name, pass_hash, permission, floor_id) VALUES ('$user_id', '$user_name', '$user_hash', $user_permission, $floor_id)",
+                    "insert into purses(user_id, amount) values('$user_id', 0)")) {
                     update("UPDATE users SET name='$user_name', permission=$user_permission WHERE floor_id = $floor_id && permission <= $my_permission && id = '$user_id'");
                 }
             } else {
-                if (!update("INSERT INTO users (id, name, pass_hash, permission, floor_id) VALUES ('$user_id', '$user_name', '$user_hash', $user_permission, $floor_id)")) {
+                if (!batchUpdate("INSERT INTO users (id, name, pass_hash, permission, floor_id) VALUES ('$user_id', '$user_name', '$user_hash', $user_permission, $floor_id)",
+                    "insert into purses(user_id, amount) values('$user_id', 0)")) {
                     update("UPDATE users SET name='$user_name', permission=$user_permission, floor_id=$floor_id WHERE permission <= $my_permission && id = '$user_id'");
                 }
             }
@@ -674,7 +668,7 @@ function get_items_hot($number)
 {
     $number = (int)$number;
     $floor_id = (int)$_SESSION["floor_id"];
-    return get_rows("SELECT i.name, i.id, SUM(od.number) AS count
+    return get_rows("SELECT i.name, i.id, SUM(od.number) AS `count`
         FROM orders o join order_detail od on o.id = od.order_id
         join kinds k on od.kind_id = k.id join items i on k.item_id = i.id
         join users u on o.user_id = u.id
@@ -740,7 +734,7 @@ function set_checkout_orders($json)
         if ($totalPrice == $paid) {
             $remark .= "全額付清(" . $totalPrice . ")";
         } else if ($totalPrice != 0 || $paid != 0) {
-            $remark .= "(需付: " . $totalPrice . " 已付: " . $paid. ")";
+            $remark .= "(需付: " . $totalPrice . " 已付: " . $paid . ")";
         }
 
         array_push($sqlStr, "update purses set amount = (amount - $totalPrice + $paid) where id = $purse_id");
@@ -760,18 +754,25 @@ function get_purse($user_id)
 }
 
 //Only show event in two days
-function get_purse_event($user_id)
+function get_purse_event($user_id = null, $user_name = null)
 {
+    if($user_name != null || trim($user_name) != ''){
+        $user_name = '%'. $user_name. '%';
+    }
+    $floor_id = $_SESSION["floor_id"];
     return get_rows("select pe.id purse_event_id, pe.purse_id, pe.order_id, pe.amount, pe.remark, u.id mod_user_id, u.name mod_user_name, o.createDate,
-                   concat(i.name,' ',k.name) item_kind, od.number order_number, k.price kind_price, pe.createDate mod_date
+                   concat(i.name,' ',k.name) item_kind, od.number order_number, k.price kind_price, pe.createDate mod_date, u2.id purse_user_id, u2.name purse_user_name
             from purse_event pe join users u on pe.mod_user_id = u.id
                                 join purses p on pe.purse_id = p.id
+                                join users u2 on p.user_id = u2.id
                                 left join orders o on pe.order_id = o.id
                                 left join order_detail od on o.id = od.order_id
                                 left join kinds k on od.kind_id = k.id
                                 left join items i on k.item_id = i.id
-            where p.user_id = '$user_id'
-            and pe.createDate between CURDATE() - INTERVAL 2 DAY and CURDATE() + INTERVAL 1 DAY");
+            where ('$user_id' is null or '$user_id' = '' or u2.id = '$user_id')
+              and ('$user_name' is null or '$user_name' = '' or u2.name like '$user_name')
+              and pe.createDate between CURDATE() - INTERVAL 2 DAY and CURDATE() + INTERVAL 1 DAY
+              and u2.floor_id = $floor_id");
 }
 
 function get_purses($floor_id = null)
@@ -788,17 +789,19 @@ function get_purses($floor_id = null)
 
 function set_purses($json)
 {
+    global $purse_max_mod_cnt_daily;
+
     $floor_id = $_SESSION["floor_id"];
     $cnt = get_purse_mod_event_times($floor_id);
 
-    if($cnt["cnt"] > 10){
-        $json["error"] = "修改次數過多, 請明日再試". $cnt;
+    if ($cnt["cnt"] > $purse_max_mod_cnt_daily) {
+        $json["error"] = "修改次數過多, 請明日再試 " . $cnt["cnt"];
         $json["state"] = "fail";
         return $json;
     }
 
-    $purseMin = -200;
-    $purseMax = 1500;
+    global $purse_min_allow;
+    global $purse_max_allow;
 
     $sqlStr = [];
 
@@ -811,8 +814,8 @@ function set_purses($json)
         $amount = (int)$purse["amount"];
         $user_id = $purse["user_id"];
 
-        if ($amount + $adjust > $purseMax || $amount + $adjust < $purseMin) {
-            $json["error"] = $user_id. " 餘額不可小於". $purseMin. "或大於". $purseMax;
+        if ($amount + $adjust > $purse_max_allow || $amount + $adjust < $purse_min_allow) {
+            $json["error"] = $user_id . " 餘額不可小於 " . $purse_min_allow . " 或大於 " . $purse_max_allow;
             $json["state"] = "fail";
             return $json;
         }
@@ -832,7 +835,8 @@ function set_purses($json)
     return $json;
 }
 
-function get_purse_mod_event_times($floor_id){
+function get_purse_mod_event_times($floor_id)
+{
     return get_row("select count(1) cnt from purse_event pe join purses p on pe.purse_id = p.id
         join users u on p.user_id = u.id
         where createDate between CURDATE() and CURDATE() + INTERVAL 1 DAY

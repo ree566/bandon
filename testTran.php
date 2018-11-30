@@ -9,7 +9,18 @@
 require_once 'module/dbc.php';
 require_once "module/operator_func.php";
 
-$PDO = dbc();
-$orders = get_orders(null, 5);
+session_start();
 
-echo print_r($orders);
+$_SESSION["uid"] = 'BB';
+$_SESSION["permission"] = '99';
+$_SESSION["floor_id"] = '5';
+
+$PDO = dbc();
+
+$user_id = 'A-7568';
+$floor_id = 5;
+
+$re = get_purse_event("A-7568 or test", null);
+
+print_r($re);
+

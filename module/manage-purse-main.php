@@ -2,18 +2,32 @@
 require_once("module/dbc.php");
 require_once("module/operator_func.php");
 include "module/locker.php";
+require_once "module/settings.php";
 
 $PDO = dbc();
 $floor_id = $_SESSION["floor_id"];
 $purses = get_purses($floor_id);
 
 ?>
+    <script>
+        var purse_min_allow = <?= $purse_min_allow ?>;
+        var purse_max_allow = <?= $purse_max_allow ?>;
+    </script>
 <?php if ($LOCKER == false) { ?>
     <div class='alert alert-danger'>開放訂購中無法異動餘額</div>
+    <div class="btn-group">
+        <a href="control.php" class="btn btn-default">返回</a>
+    </div>
 <?php } else { ?>
+    <h5>
+        <ul style="color:red; list-style-type: none;">
+            <li><b>(※備註為必填)</b></li>
+            <li>調整後金額區間請維持在 <?= $purse_min_allow ?>$ ~ <?= $purse_max_allow ?>$ </li>
+        </ul>
+    </h5>
     <form method="post" class="" role="form">
         <div class="panel panel-default">
-            <div class="panel-heading">異動使用者餘額(備註為必填)</div>
+            <div class="panel-heading">異動使用者餘額</div>
             <table class="group table text-left sortable table-striped table-hover">
                 <thead>
                 <tr>

@@ -11,7 +11,7 @@ $purse_event = get_purse_event($user_id);
 <form method="post" class="" role="form">
     <h3>您的餘額: $<?= $purse["amount"] ?></h3>
     <div class="panel panel-default">
-        <div class="panel-heading">餘額異動紀錄(僅顯示2天內)</div>
+        <div class="panel-heading">餘額異動紀錄<b style="color: red">(※僅顯示2天內)</b></div>
         <table class="group table text-left sortable table-striped table-hover">
             <thead>
             <tr>
@@ -29,7 +29,7 @@ $purse_event = get_purse_event($user_id);
                 <tr data-uid="<?= $event["purse_event_id"] ?>" class="purse">
                     <td><?= $event["purse_event_id"] ?></td>
                     <td><?= $event["item_kind"] . "x" . $event["order_number"] ?></td>
-                    <td><?= (isset($event["amount"]) ? ($event["amount"] > 0 ? "+" : "") . $event["amount"] : (isset($event["item_kind"]) ? -($event["kind_price"] * $event["order_number"]) : 'n/a')) ?></td>
+                    <td><?= ($event["amount"] > 0 ? "+" : "") . $event["amount"] ?></td>
                     <td><?= isset($event["createDate"]) ? date('Y-m-d', strtotime($event["createDate"])) : 'n/a' ?></td>
                     <td><?= $event["mod_user_name"] ?></td>
                     <td><?= date('Y-m-d', strtotime($event["mod_date"])) ?></td>
