@@ -720,7 +720,7 @@ function set_checkout_orders($json)
 
     $sqlStr = array();
     array_push($sqlStr, "update orders o join users u on o.user_id = u.id
-        set o.processed = 1 where u.floor_id = $floor_id");
+        set o.processed = 1 and o.lastUpdateDate = now() where u.floor_id = $floor_id");
 
     $orders = $json["orders"];
 
@@ -753,8 +753,8 @@ function get_purse($user_id)
           from purses p join users u on p.user_id = u.id where u.id = '$user_id'");
 }
 
-//Only show event in two days
-function get_purse_event($user_id = null, $user_name = null)
+//Only show event in a week
+function get_purse_event($user_id = null, $user_name = null, $startDate = null, $endDate = null)
 {
     if($user_name != null || trim($user_name) != ''){
         $user_name = '%'. $user_name. '%';
@@ -771,7 +771,8 @@ function get_purse_event($user_id = null, $user_name = null)
                                 left join items i on k.item_id = i.id
             where ('$user_id' is null or '$user_id' = '' or u2.id = '$user_id')
               and ('$user_name' is null or '$user_name' = '' or u2.name like '$user_name')
-              and pe.createDate between CURDATE() - INTERVAL 2 DAY and CURDATE() + INTERVAL 1 DAY
+              and ('$startDate' is null or '$startDate' = '' or pe.createDate between '$startDate' and '$endDate')
+              and (pe.createDate between CURDATE() - INTERVAL 1 WEEK and CURDATE() + INTERVAL 1 DAY)
               and u2.floor_id = $floor_id");
 }
 
@@ -842,4 +843,19 @@ function get_purse_mod_event_times($floor_id)
         where createDate between CURDATE() and CURDATE() + INTERVAL 1 DAY
         and order_id is null
         and u.floor_id = $floor_id");
+}
+
+function get_order_chart($json){
+    $floor_id = $_SESSION["floor_id"];
+    $startDate = $json["startDate"];
+    $endDate = $json["endDate"];
+
+    return get_rows("select user_id, user_name, count(1) cnt from(
+              select o.user_id, u.name user_name
+              from orders o join users u on o.user_id = u.id
+              where lastUpdateDate between '$startDate' and '$endDate'
+              and u.floor_id = $floor_id
+              group by o.user_id, u.name, cast(o.lastUpdateDate as date)
+                         )t1
+          group by user_id, user_name");
 }

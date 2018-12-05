@@ -28,7 +28,8 @@
                                         <a href="manage-floor.php">設定樓層</a>
                                     </li>
                                 <?php } ?>
-                                <li><a href="purse-search.php">交易紀錄</a></li>
+                                <li class="dropdown-submenu"><a href="purse-search.php">交易紀錄</a></li>
+                                <li class="dropdown-submenu"><a href="order-chart.php">統計表</a></li>
 <!--                                <li class="divider"></li>-->
 <!--                                <li><a href="#">Separated link</a></li>-->
                             </ul>

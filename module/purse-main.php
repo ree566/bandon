@@ -11,7 +11,7 @@ $purse_event = get_purse_event($user_id);
 <form method="post" class="" role="form">
     <h3>您的餘額: $<?= $purse["amount"] ?></h3>
     <div class="panel panel-default">
-        <div class="panel-heading">餘額異動紀錄<b style="color: red">(※僅顯示2天內)</b></div>
+        <div class="panel-heading">餘額異動紀錄<b style="color: red">(※僅顯示1周內)</b></div>
         <table class="group table text-left sortable table-striped table-hover">
             <thead>
             <tr>

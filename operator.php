@@ -15,7 +15,7 @@ if(isset($_POST["command"])){
 	}
 	
 	require_once "module/dbc.php";
-	$MYSQLI = dbc();
+    $PDO = dbc();
 
 	require_once "module/operator_func.php";
 	// todat hot
@@ -100,6 +100,11 @@ if(isset($_POST["command"])){
         if($_POST["command"] == "get-purse-event"){
             $json["purse_event"] = get_purse_event(isset($json["user_id"]) ? $json["user_id"] : null,
                 isset($json["user_name"]) ? $json["user_name"] : null);
+        }
+
+        //adjust purse
+        if($_POST["command"] == "get-order-chart"){
+            $json["order_chart"] = get_order_chart($json);
         }
 	}
 	
