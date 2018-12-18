@@ -10,6 +10,8 @@
     //Param for low-purse-lock.js
     var amount = <?= $purse["amount"] ?>;
     var purse_min_allow = <?= $purse_min_allow ?>;
+    var user_id = '<?= $user_id ?>';
+    var floor_id = '<?= $_SESSION["floor_id"] ?>';
 </script>
 <div class="col-md-9 menus">
     <h2>菜單</h2>
@@ -28,4 +30,7 @@
         <button type="button" class="btn btn-default submit"></button>
     </div>
 </div>
+<script src="js/moment.js"></script>
 <script src="low-purse-lock.js"></script>
+<script src="time-limit-lock.js"></script>
+<img src="images/limit-icon.jpg" class="limit-icon" style="width: 50px; height: 50px; float:right;" hidden>

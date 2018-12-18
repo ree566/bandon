@@ -27,7 +27,7 @@ $purses = get_purses($floor_id);
     </h5>
     <form method="post" class="" role="form">
         <div class="panel panel-default">
-            <div class="panel-heading">異動使用者餘額</div>
+            <div class="panel-heading text-center">異動使用者餘額</div>
             <table class="group table text-left sortable table-striped table-hover">
                 <thead>
                 <tr>

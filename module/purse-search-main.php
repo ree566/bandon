@@ -13,7 +13,7 @@ $user_id = $_SESSION["uid"];
         <input type="button" class="btn btn-default submit" value="查詢">
     </div>
 
-    <table id="searchResult" class="table table-striped">
+    <table id="searchResult" class="group table text-left sortable table-striped table-hover">
         <thead>
         <tr>
             <th>id</th>

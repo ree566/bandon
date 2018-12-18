@@ -96,7 +96,7 @@ function get_groups($floor_id = null, $items = false, $orders = false)
 
     if ($floor_id) {
         $floor_id = (int)$floor_id;
-        $groups = get_rows("SELECT groups.* FROM groups, floor_group WHERE floor_group.floor_id = $floor_id && floor_group.group_id = groups.id");
+        $groups = get_rows("SELECT groups.*, floor_group.time_limit FROM groups, floor_group WHERE floor_group.floor_id = $floor_id && floor_group.group_id = groups.id");
     } else {
         $groups = get_rows("SELECT * FROM groups");
     }
@@ -329,70 +329,135 @@ function get_users($floor_id = null)
 function set_orders($json)
 {
     $user_id = escape($_SESSION["uid"]);
-    $floor_id = $json["orders"][0]["floor"]["id"];
+    $floor_id = $_SESSION["floor_id"];
     $floor = get_floor($floor_id);
     if ($floor == null || $floor["open"] == '0') {
         $json["state"] = "fail";
         $json["error"] = "Floor's order is not available now";
     } else {
+        $orders = $json["orders"];
+//        $re = check_contain_expired_kinds($orders, $user_id, $floor_id);
+        $re = false;
 
-        update("delete o from orders o where o.user_id = '$user_id' and processed = 0");
-        update("insert into orders(user_id) values('$user_id') ");
+        if ($re == true) {
+            $json["state"] = "fail";
+            $json["error"] = "Order contain expire items, please refresh page and try again";
+        } else {
+            update("delete o from orders o where o.user_id = '$user_id' and processed = 0");
+            update("insert into orders(user_id) values('$user_id') ");
 
-        $order_id = last_id();
+            $order_id = last_id();
 
-        $sqlQuery = array();
+            $sqlQuery = array();
 
-        foreach ($json["orders"] as $order) {
-            $floor_id = (int)$order["floor"]["id"];
-            $item_id = (int)$order["item"]["id"];
-            $kind_id = (int)$order["kind"]["id"];
-            $number = (int)$order["number"];
+            foreach ($orders as $order) {
+                $floor_id = (int)$order["floor"]["id"];
+                $item_id = (int)$order["item"]["id"];
+                $kind_id = (int)$order["kind"]["id"];
+                $number = (int)$order["number"];
 
-            // check number
-            if (!$number) {
-                continue;
-            }
-
-            // check floor open
-            if (!get_row("SELECT * FROM floors WHERE floors.id = $floor_id && floors.open = 1")) {
-                continue;
-            }
-
-            // check floor-group-item
-            if (!get_row("SELECT * FROM items, groups, floor_group WHERE items.id = $item_id && items.group_id = groups.id &&
-				groups.id = floor_group.group_id && floor_group.floor_id = $floor_id")) {
-                continue;
-            }
-
-            // check item-kind
-            if (!get_row("SELECT * FROM items, kinds WHERE items.id = $item_id && kinds.id = $kind_id && kinds.item_id = items.id")) {
-                continue;
-            }
-
-            $option_ids = array();
-            foreach ($order["options"] as $option) {
-                $option_id = (int)$option["id"];
-
-                // check item-detail-option
-                if (!get_row("SELECT * FROM items, details, options, item_detail WHERE items.id = $item_id && options.id = $option_id &&
-					options.detail_id = details.id && item_detail.item_id = items.id && item_detail.detail_id = details.id ")) {
+                // check number
+                if (!$number) {
                     continue;
                 }
-                $option_ids[] = $option["id"];
+
+                // check floor open
+                if (!get_row("SELECT * FROM floors WHERE floors.id = $floor_id && floors.open = 1")) {
+                    continue;
+                }
+
+                // check floor-group-item
+                if (!get_row("SELECT * FROM items, groups, floor_group WHERE items.id = $item_id && items.group_id = groups.id &&
+				groups.id = floor_group.group_id && floor_group.floor_id = $floor_id")) {
+                    continue;
+                }
+
+                // check item-kind
+                if (!get_row("SELECT * FROM items, kinds WHERE items.id = $item_id && kinds.id = $kind_id && kinds.item_id = items.id")) {
+                    continue;
+                }
+
+                $option_ids = array();
+                foreach ($order["options"] as $option) {
+                    $option_id = (int)$option["id"];
+
+                    // check item-detail-option
+                    if (!get_row("SELECT * FROM items, details, options, item_detail WHERE items.id = $item_id && options.id = $option_id &&
+					options.detail_id = details.id && item_detail.item_id = items.id && item_detail.detail_id = details.id ")) {
+                        continue;
+                    }
+                    $option_ids[] = $option["id"];
+                }
+                $option_ids = escape(implode(",", $option_ids));
+
+                //Add query add batch update in one transaction
+                array_push($sqlQuery, "INSERT INTO order_detail (order_id, kind_id, option_ids, number) VALUES ($order_id, $kind_id, '$option_ids', $number)");
             }
-            $option_ids = escape(implode(",", $option_ids));
+            batchUpdate(...$sqlQuery);
 
-            //Add query add batch update in one transaction
-            array_push($sqlQuery, "INSERT INTO order_detail (order_id, kind_id, option_ids, number) VALUES ($order_id, $kind_id, '$option_ids', $number)");
+            $json["orders"] = get_orders($user_id);
         }
-        batchUpdate(...$sqlQuery);
-
-        $json["orders"] = get_orders($user_id);
 
     }
 
     return $json;
+}
+
+function check_contain_expired_kinds($orders, $user_id, $floor_id)
+{
+    //Get added and removed kinds
+    $e_orders = get_orders($user_id, $floor_id);
+
+    $diff_kind_check = function ($a, $b) {
+        $kind_id = get_kind_id($a);
+        $e_kind_id = get_kind_id($b);
+
+        if ($kind_id === $e_kind_id) return 0;
+        if ($kind_id > $e_kind_id) return 1;
+        return -1;
+
+    };
+
+    $added = array_udiff($orders, $e_orders, $diff_kind_check);
+    $removed = array_udiff($e_orders, $orders, $diff_kind_check);
+
+    if(empty($added) && empty($removed)){
+        return false;
+    }
+
+    //Check expire kind has been added or delete
+    $expired_kinds = get_expired_kinds($floor_id);
+    $kind_check = function ($a, $b) {
+        if (isset($b["id"])) {
+            $kind_id = get_kind_id($a);
+            $e_kind_id = $b["id"];
+
+            if ($kind_id === $e_kind_id) return 0;
+            if ($kind_id > $e_kind_id) return 1;
+            return -1;
+        }
+        return 1;
+    };
+
+    $re1 = array_uintersect($added, $expired_kinds, $kind_check);
+    $re2 = array_uintersect($removed, $expired_kinds, $kind_check);
+
+    return (empty($re1) && empty($re2)) ? false : true;
+}
+
+function get_kind_id($obj)
+{
+    return isset($obj["kind"]) ? (int)$obj["kind"]["id"] : (isset($obj["kind_id"]) ? (int)$obj["kind_id"] : null);
+}
+
+function get_expired_kinds($floor_id)
+{
+    return get_rows("select k.id 
+        from kinds k 
+          join items i on k.item_id = i.id 
+          join floor_group fg on i.group_id = fg.group_id
+        where fg.time_limit < now()
+          and fg.floor_id = $floor_id");
 }
 
 function set_user($json)
@@ -756,8 +821,8 @@ function get_purse($user_id)
 //Only show event in a week
 function get_purse_event($user_id = null, $user_name = null, $startDate = null, $endDate = null)
 {
-    if($user_name != null || trim($user_name) != ''){
-        $user_name = '%'. $user_name. '%';
+    if ($user_name != null || trim($user_name) != '') {
+        $user_name = '%' . $user_name . '%';
     }
     $floor_id = $_SESSION["floor_id"];
     return get_rows("select pe.id purse_event_id, pe.purse_id, pe.order_id, pe.amount, pe.remark, u.id mod_user_id, u.name mod_user_name, o.createDate,
@@ -845,7 +910,8 @@ function get_purse_mod_event_times($floor_id)
         and u.floor_id = $floor_id");
 }
 
-function get_order_chart($json){
+function get_order_chart($json)
+{
     $floor_id = $_SESSION["floor_id"];
     $startDate = $json["startDate"];
     $endDate = $json["endDate"];
