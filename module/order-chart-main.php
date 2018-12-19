@@ -6,8 +6,8 @@ $PDO = dbc();
 $user_id = $_SESSION["uid"];
 
 ?>
-<link rel="stylesheet" href="bootstrap/css/bootstrap-datepicker.css">
-<script src="bootstrap/js/bootstrap-datepicker.min.js"></script>
+<link rel="stylesheet" href="lib/bootstrap/css/bootstrap-datepicker.css">
+<script src="lib/bootstrap/js/bootstrap-datepicker.min.js"></script>
 <form method="post" class="" role="form">
     <div class="form-group form-inline">
         <div class="input-group input-daterange">

@@ -30,7 +30,7 @@
         <button type="button" class="btn btn-default submit"></button>
     </div>
 </div>
-<script src="js/moment.js"></script>
+<script src="lib/moment/moment.js"></script>
 <script src="low-purse-lock.js"></script>
 <script src="time-limit-lock.js"></script>
 <img src="images/limit-icon.jpg" class="limit-icon" style="width: 50px; height: 50px; float:right;" hidden>

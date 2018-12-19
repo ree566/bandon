@@ -6,10 +6,10 @@ include "module/locker.php";
 require_once "module/dbc.php";
 
 $UID = $_SESSION["uid"];
-$TITLE = "結算訂購資料";
-$PAGE = "order-checkout";
+$TITLE = "設定店家時限";
+$PAGE = "manage-time-limit";
 
-$MAIN = get_include_contents("module/order-checkout-main.php");
+$MAIN = get_include_contents("module/manage-time-limit-main.php");
 
 include "module/layout.php";
 

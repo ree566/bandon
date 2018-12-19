@@ -9,8 +9,8 @@ $floor = get_floor($floor_id);
 
 $LOCKER = $floor["open"] == 0;
 
-if(!isset($LOCKER)){
-	$LOCKER = true;
+if (!isset($LOCKER)) {
+    $LOCKER = true;
 }
 
 

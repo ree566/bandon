@@ -30,8 +30,8 @@
                                 <?php } ?>
                                 <li class="dropdown-submenu"><a href="purse-search.php">交易紀錄</a></li>
                                 <li class="dropdown-submenu"><a href="order-chart.php">統計表</a></li>
-<!--                                <li class="divider"></li>-->
-<!--                                <li><a href="#">Separated link</a></li>-->
+                                <!--                                <li class="divider"></li>-->
+                                <!--                                <li><a href="#">Separated link</a></li>-->
                             </ul>
                         </div>
                     </li>
@@ -45,7 +45,7 @@
                 </li>
                 <?php if ($_SESSION["permission"] >= 2) { ?>
                     <li>
-                        <?php if($LOCKER == true){ ?>
+                        <?php if ($LOCKER == true) { ?>
                             <a href="start.php" style="color:red">
                                 <span class="glyphicon glyphicon-off" aria-hidden="true"></span>結束訂購中
                             </a>

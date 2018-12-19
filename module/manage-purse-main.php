@@ -22,7 +22,7 @@ $purses = get_purses($floor_id);
     <h5>
         <ul style="color:red; list-style-type: none;">
             <li><b>(※備註為必填)</b></li>
-            <li>調整後金額區間請維持在 <?= $purse_min_allow ?>$ ~ <?= $purse_max_allow ?>$ </li>
+            <li>調整後金額區間請維持在 <?= $purse_min_allow ?>$ ~ <?= $purse_max_allow ?>$</li>
         </ul>
     </h5>
     <form method="post" class="" role="form">

@@ -421,7 +421,7 @@ function check_contain_expired_kinds($orders, $user_id, $floor_id)
     $added = array_udiff($orders, $e_orders, $diff_kind_check);
     $removed = array_udiff($e_orders, $orders, $diff_kind_check);
 
-    if(empty($added) && empty($removed)){
+    if (empty($added) && empty($removed)) {
         return false;
     }
 
@@ -924,4 +924,21 @@ function get_order_chart($json)
               group by o.user_id, u.name, cast(o.lastUpdateDate as date)
                          )t1
           group by user_id, user_name");
+}
+
+function set_time_limit2($json)
+{
+    $sqlStr = [];
+    foreach ($json["groups"] as &$groups) {
+        $floor_id = $groups["floor_id"];
+        $group_id = $groups["group_id"];
+        $timeLimit = isset($groups["time_limit"]) ? $groups["time_limit"] : null;
+
+        array_push($sqlStr, "update floor_group set time_limit = '$timeLimit'
+          where floor_id = $floor_id
+            and group_id = $group_id");
+
+    }
+
+    batchUpdate(...$sqlStr);
 }

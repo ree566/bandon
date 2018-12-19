@@ -76,5 +76,5 @@ if (isset($_COOKIE["paid_temp"])) {
         </div>
     </form>
 
-<!--    --><?php //print_r($_COOKIE); ?>
+    <!--    --><?php //print_r($_COOKIE); ?>
 <?php } ?>
