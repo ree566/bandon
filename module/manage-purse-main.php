@@ -28,13 +28,13 @@ $purses = get_purses($floor_id);
     <form method="post" class="" role="form">
         <div class="panel panel-default">
             <div class="panel-heading text-center">異動使用者餘額</div>
-            <table class="group table text-left sortable table-striped table-hover">
+            <table class="group table text-left table-striped table-hover">
                 <thead>
                 <tr>
-                    <td>purse_id</td>
+                    <td>id</td>
                     <td>user_id</td>
                     <td>user_name</td>
-                    <td>amount</td>
+                    <td>餘額</td>
                     <td>異動值</td>
                     <td>備註</td>
                 </tr>
@@ -45,7 +45,10 @@ $purses = get_purses($floor_id);
                         <td class="purse_id"><?= $purse["purse_id"] ?></td>
                         <td class="user_id"><?= $purse["user_id"] ?></td>
                         <td class="user_name"><?= $purse["user_name"] ?></td>
-                        <td class="amount"><?= $purse["amount"] ?></td>
+                        <td class="amount">
+                            <f><?= $purse["amount"] ?></f>
+                            <input type="hidden" class="origin-amount" value="<?= $purse["amount"] ?>">
+                        </td>
                         <td class="adjust"><input type="number" class="adjust_num form-control" value="0"></td>
                         <td class="remark"><input type="text" class="order-remark form-control" placeholder="輸入備註"/>
                         </td>

@@ -54,7 +54,7 @@ if (isset($_COOKIE["paid_temp"])) {
                     <td class="totalPrice"><?= $order["totalPrice"] ?></td>
                     <td class="paid"><input type="number" class="order-paid form-control" placeholder="輸入已付金額" min="0"
                                             max="2000"
-                                            value="<?= isset($info['P' . $order["purse_id"]]) ? $info['P' . $order["purse_id"]] : null ?>"/>
+                                            value="<?= isset($info['P' . $order["purse_id"]]) ? $info['P' . $order["purse_id"]] : 0 ?>"/>
                     </td>
                     <td class="balance">
                         <input class="origin-balance" type="hidden" value="<?= $order["balance"] ?>">
