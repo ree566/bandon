@@ -756,14 +756,34 @@ function clean_order($floor_id)
     update("DELETE FROM orders WHERE floor_id = $floor_id");
 }
 
-function get_checkout_orders($floor_id)
+function get_checkout_orders($floor_id, array $group_ids = null)
 {
-    return get_rows("select o.id order_id, o.user_id, u.name user_name, createDate, sum(od.number * k.price) totalPrice, p.id purse_id, p.amount balance 
+    //Query with "where in clause" can't exec with prepare($q), sql param will be replace with 'id1, id2' and can't
+    //query out the correct result.
+    $placeHolder = null;
+    $g = null;
+
+    if ($group_ids != null) {
+        $placeHolder = implode(',', array_fill(0, count($group_ids), '?'));
+        $g = 1;
+    }
+
+    $q = "select o.id order_id, o.user_id, u.name user_name, createDate, sum(od.number * k.price) totalPrice, p.id purse_id, p.amount balance 
         from orders o join order_detail od on o.id = od.order_id
-        join kinds k on od.kind_id = k.id join users u on o.user_id = u.id join purses p on u.id = p.user_id
-        where u.floor_id = $floor_id and o.processed = 0
+          join kinds k on od.kind_id = k.id 
+          join users u on o.user_id = u.id 
+          join purses p on u.id = p.user_id
+          join items i on k.item_id = i.id
+        where u.floor_id = $floor_id 
+          and o.processed = 0
+          and ($g is null or i.group_id in($placeHolder))
         group by o.id, o.user_id, o.createDate, p.id, p.amount
-        order by u.id");
+        order by u.id";
+
+    global $PDO;
+    $stmt = $PDO->prepare($q);
+    $stmt->execute($group_ids);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 /*
