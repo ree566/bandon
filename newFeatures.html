@@ -137,6 +137,14 @@
             width: 50%;
             height: 50%;
         }
+
+        .alert {
+            color: red;
+        }
+        .title{
+            background-color: rosybrown;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -144,11 +152,11 @@
     <h1>便當系統新功能</h1>
     <ul>
         <li>
-            <h2>菜單限時</h2>
+            <h2 class="title">前台</h2>
             <ul>
                 <li>
                     <ul>
-                        <h4>前台</h4>
+                        <h2>菜單限時</h2>
                         <li class="content">
                             <p>限時中的菜單，在訂購時會呈現紅色外框醒目提示</p>
                             <p><img src="images/view-page.png" alt=""></p>
@@ -157,9 +165,25 @@
                         </li>
                     </ul>
                 </li>
+
                 <li>
                     <ul>
-                        <h4>後台</h4>
+                        <h2>錢包履歷</h2>
+                        <li class="content">
+                            <p>可從上方導覽列"我的錢包"中，查詢近期的餘額異動紀錄</p>
+                            <p><img src="images/purse-event.png" alt=""></p>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+
+        <li>
+            <h2 class="title">後台</h2>
+            <ul>
+                <li>
+                    <ul>
+                        <h2>菜單限時</h2>
                         <li class="content">
                             <p>管理頁面新增限時設定按鈕</p>
                             <p><img src="images/ctrl-timeLimit-btn.png" alt=""></p>
@@ -168,224 +192,79 @@
                         </li>
                     </ul>
                 </li>
-            </ul>
-        </li>
 
-        <li>
-            <h2>點餐</h2>
-            <ul>
-                <li class="content">
-                    <p>密碼預設和工號相同，登入後可點右上方 <img src="images/btn-change-pass.png" alt=""> 修改密碼。</p>
-                    <p>登入後導向的頁面，也是一般使用者主要的操作頁面。</p>
-                    <p><img src="images/page-order.png" alt=""></p>
-                    <p>
-                        選擇項目種類與細項後點 <img src="images/btn-add-order.png" alt="">
-                        即可加入右方的訂單。在右方訂單點
-                        <img src="images/btn-delete-order.png" alt=""> 即可移除。
-                    </p>
-                    <p>選擇完畢，點 <img src="images/submit-order.png" alt=""> 即可儲存。</p>
-                </li>
-            </ul>
-        </li>
-
-        <li>
-            <h2>使用者管理</h2>
-            <ul>
-                <li class="content">
-                    <p>此功能要求管理員權限。</p>
-                    <p><img src="images/btn-control.png" alt="">
-                        <img src="images/btn-manage-user.png" alt=""></p>
-            </ul>
-        </li>
-
-        <li>
-            <h3>加入使用者</h3>
-            <ul>
-                <li class="content">
-                    <p><img src="images/btn-add-user.png" alt=""></p>
-                    <p>在文字欄輸入以下格式</p>
-                    <pre><code>工號 姓名 權限 樓層</code></pre>
-                    <p>按 <img src="images/submit-add-user.png" alt=""> 即可匯入。</p>
+                <li>
+                    <h2>結算(此功能必須在關閉訂購時執行)</h2>
                     <ul>
-                        <li>權限與樓層是選填。</li>
-                        <li>一般管理員只能匯入相同樓層的使用者，總管理員可以隨意指定樓層。</li>
-                        <li>無法匯入權限比自己高的使用者。</li>
+                        <li class="content">
+                            <ol>
+                                <li>
+                                    <p>點選管理頁面的結算按鈕</p>
+                                    <p><img src="images/order-checkout-btn.png" alt=""></p>
+                                </li>
+                                <li>
+                                    <p>勾選欲結算的店家</p>
+                                    <p><img src="images/order-checkout-page-step1.png" alt=""></p>
+                                </li>
+
+                                <li>
+                                    <p>確認資訊即可結算</p>
+                                    <p><img src="images/order-checkout-page-step2.png" alt=""></p>
+                                    <p class="alert">結算完畢的店家，系統會自動關閉訂購</p>
+                                </li>
+                            </ol>
+                        </li>
                     </ul>
                 </li>
-            </ul>
-        </li>
 
-
-        <li>
-            <h3>變更使用者資料</h3>
-            <ul>
-                <li class="content">
-                    <p>和加入使用者相同，重新匯入會變更使用者名稱、權限；總管理員可以變更樓層。</p>
-                </li>
-            </ul>
-        </li>
-
-        <li>
-            <h3>刪除使用者</h3>
-            <ul>
-                <li class="content">
-                    <p><img src="images/btn-delete-user.png" alt=""></p>
-                    <p>此列表會列出所屬樓層的所有使用者；總管理員可以列出全部使用者。將勾選框勾選後點 <img src="images/submit-delete-user.png" alt=""> 即可刪除。
-                    </p>
+                <li>
+                    <h2>餘額異動</h2>
                     <ul>
-                        <li>無法刪除權限比自己高的使用者</li>
+                        <li class="content">
+                            <ol>
+                                <li>
+                                    <p>點選上方導覽列的 管理 > 餘額異動</p>
+                                </li>
+                                <li>
+                                    <p>填入異動值以及備註(兩欄皆必填)</p>
+                                    <p><img src="images/mod-purse.png" alt=""></p>
+                                </li>
+                                <li>
+                                    <p>送出後即可在查詢頁面查到異動紀錄</p>
+                                </li>
+                            </ol>
+                        </li>
                     </ul>
                 </li>
-            </ul>
-        </li>
 
-        <li>
-            <h2>店家管理(此功能要求管理員權限。)</h2>
-            <ul>
-                <li class="content">
-                    <p><img src="images/btn-control.png" alt="">
-                        <img src="images/btn-manage-group.png" alt=""></p>
-                </li>
-            </ul>
-        </li>
-
-        <li>
-            <h3>加入店家</h3>
-            <ul>
-                <li class="content">
-                    <p>在店家列表下輸入名稱後點 <img src="images/btn-add-group.png" alt=""> 即可新增。</p>
-                </li>
-            </ul>
-        </li>
-
-        <li>
-            <h3>變更店家資料</h3>
-            <ul>
-                <li class="content">
-                    <p>在左側店家列表選擇店家後，可以在右邊編輯店名和菜單項目。</p>
+                <li>
+                    <h2>錢包履歷查詢</h2>
                     <ul>
-                        <li>若是有某樓層在使用此店家菜單，會無法編輯。</li>
+                        <li class="content">
+                            <ol>
+                                <li>
+                                    <p>點選上方導覽列的 管理 > 交易紀錄</p>
+                                </li>
+                                <li>
+                                    <p>選擇搜尋的名字或工號</p>
+                                </li>
+
+                                <li>
+                                    <p>按下查詢即可帶出時間內資料</p>
+                                    <p><img src="images/purse-event-search.png" alt=""></p>
+                                </li>
+                            </ol>
+                        </li>
                     </ul>
                 </li>
+
             </ul>
         </li>
 
-        <li>
-            <h4>編輯項目</h4>
-            <ul>
-                <li class="content">
-                    <p><img src="images/page-manage-group.png" alt=""></p>
-                    <ul>
-                        <li>文字欄依序填入 <code>項目名稱 種類名稱 價格</code></li>
-                        <li>一個項目若只包含一個種類，可以不填種類名稱。</li>
-                        <li>一個項目必定包含一個種類。若把單項底下的種類全數勾選刪除，儲存後會留下一個零元的空種類。</li>
-                        <li>還未儲存即離開頁面會造成資料遺失。包括關閉視窗、切換到其它店家、編輯細項等等。</li>
-                    </ul>
-                </li>
-            </ul>
-        </li>
+        <ul>
 
-        <li>
-            <h4>編輯細項</h4>
-            <ul>
-                <li class="content">
-                    <p><img src="images/page-manage-detail.png" alt=""></p>
-                    <p>細項可以指定各項目底下的多擇一小項目 <img src="images/page-detail-select.png" alt=""> 。</p>
-                    <ul>
-                        <li>文字欄依序填入 <code>細項名稱 以逗號隔開的多擇一選項 價格</code></li>
-                        <li>底下的表格設定細項與項目關聯，將細項附屬在項目上。</li>
-                    </ul>
-                </li>
-            </ul>
-        </li>
 
-        <li>
-            <h3>刪除店家</h3>
-            <ul>
-                <li class="content">
-                    <p>在編輯項目頁面，將店名右方的 <img src="images/checkbox-delete-group.png" alt=""> 勾選，儲存後即會刪除。</p>
-                </li>
-            </ul>
-        </li>
-
-        <li>
-            <h2>匯入菜單</h2>
-            <ul>
-                <li class="content">
-                    <p><img src="images/btn-select-group.png" alt=""></p>
-                    <p>店家菜單是由所有管理者共同編輯的，在還未匯入前並不會顯示給一般使用者，匯入後才可使用。此功能需要管理員權限。</p>
-                    <p><img src="images/page-select-group.png" alt=""></p>
-                    <p>此頁面分為兩側，左側為所有的店家列表，右側為自己樓層匯入的菜單。在列表中選擇好店家後，點擊中央的箭頭按鈕即可匯入和匯出。匯入好菜單後點「儲存」，使用者就可以在點餐畫面上看到了。</p>
-                    <ul>
-                        <li>只有在關閉訂購時可以變更匯入的菜單。</li>
-                    </ul>
-                </li>
-            </ul>
-        </li>
-
-        <li class="content">
-            <h2>開放與關閉訂購</h2>
-            <ul>
-                <li class="content">
-                    <p><img src="images/btn-start.png" alt="">
-                        <img src="images/btn-end.png" alt=""></p>
-                    <p>當自己樓層開放訂購時，所有的使用者都可以在訂購頁面選訂此樓層的菜單；關閉訂購時則否。</p>
-                    <p>建議在統計資料前關閉訂購並列印資料。在重新開啟訂購前清空資料並重新匯入菜單。</p>
-                </li>
-            </ul>
-        </li>
-
-        <li class="content">
-            <h2>統計結果</h2>
-            <ul>
-                <li class="content">
-                    此為管理員進入管理頁面時顯示的資料。
-                </li>
-            </ul>
-        </li>
-
-        <li class="content">
-            <h3>各店家統計結果</h3>
-            <ul>
-                <li class="content">
-                    將訂單依店家分開統計，與店家打電話訂餐時可參考此表格。
-                </li>
-            </ul>
-        </li>
-
-        <li class="content">
-            <h3>每人支付統計</h3>
-            <ul>
-                <li class="content">
-                    將訂單依使用者分開統計價格，收錢時可參考此表格。
-                </li>
-            </ul>
-        </li>
-
-        <li class="content">
-            <h3>所有訂單</h3>
-            <ul>
-                <li class="content">
-                    所有訂單的詳細資料。
-                </li>
-            </ul>
-        </li>
-
-        <li class="content">
-            <h2>設定樓層</h2>
-            <ul>
-                <li class="content">
-                    <p><img src="images/btn-manage-floor.png" alt=""></p>
-                    <p>此功能要求<strong>總管理員</strong>權限。</p>
-                    <p><img src="images/page-manage-floor.png" alt=""></p>
-                    <p>此頁面可以管理所有樓層，包括增加與刪除、修改名稱、開放與關閉訂購。
-                        修改後點儲存按鈕即可。</p>
-                    <ul>
-                        <li>刪除樓層時，若有使用者屬於該樓層，則刪除失敗。</li>
-                    </ul>
-                </li>
-            </ul>
-        </li>
+        </ul>
     </ul>
 </div>
 </body>

@@ -20,11 +20,11 @@ $(function () {
             var group_id = g.attr("data-gid");
 
             var time_limit = g.find(".time-limit").val();
+            var highlight = g.find(".highlight").val();
 
             if (time_limit != null && time_limit != '' && time_limit != '0000-00-00 00:00:00') {
                 var time = moment(time_limit);
 
-                g.attr("style", "outline: 5px dashed red;");
                 var head = g.find("h3");
                 head.append("<h5 class='countDown'></h5>");
 
@@ -52,8 +52,11 @@ $(function () {
                     g.find("input, button").attr("disabled", true).unbind("click");
                 }
 
-                head.attr("style", "color: red");
-                head.find("font").after(limit_icon.clone().removeAttr("hidden"));
+                if (highlight == 1) {
+                    g.attr("style", "outline: 5px dashed red;");
+                    head.attr("style", "color: red");
+                    head.find("font").after(limit_icon.clone().removeAttr("hidden"));
+                }
             }
 
         });

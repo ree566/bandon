@@ -1,9 +1,10 @@
 <?php
-    require_once "dbc.php";
-    require_once "settings.php";
+require_once "dbc.php";
+require_once "settings.php";
+include "module/locker.php";
 
-    $user_id = $_SESSION["uid"];
-    $purse = get_purse($user_id);
+$user_id = $_SESSION["uid"];
+$purse = get_purse($user_id);
 ?>
 
 <script>
@@ -32,5 +33,7 @@
 </div>
 <script src="lib/moment/moment.js"></script>
 <script src="low-purse-lock.js"></script>
-<script src="time-limit-lock.js"></script>
+<?php if ($LOCKER == false) { ?>
+    <script src="time-limit-lock.js"></script>
+<?php } ?>
 <img src="images/limit-icon.jpg" class="limit-icon" style="width: 50px; height: 50px; float:right;" hidden>

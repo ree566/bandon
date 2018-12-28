@@ -96,7 +96,7 @@ function get_groups($floor_id = null, $items = false, $orders = false)
 
     if ($floor_id) {
         $floor_id = (int)$floor_id;
-        $groups = get_rows("SELECT groups.*, floor_group.time_limit FROM groups, floor_group WHERE floor_group.floor_id = $floor_id && floor_group.group_id = groups.id");
+        $groups = get_rows("SELECT groups.*, floor_group.time_limit, floor_group.highlight FROM groups, floor_group WHERE floor_group.floor_id = $floor_id && floor_group.group_id = groups.id");
     } else {
         $groups = get_rows("SELECT * FROM groups");
     }
@@ -873,7 +873,7 @@ function get_purse_event($user_id = null, $user_name = null, $startDate = null, 
             where ('$user_id' is null or '$user_id' = '' or u.id = '$user_id')
               and ('$user_name' is null or '$user_name' = '' or u.name like '$user_name')
               and ('$startDate' is null or '$startDate' = '' or pe.createDate between '$startDate' and '$endDate')
-              and (pe.createDate between current_timestamp () - INTERVAL 1 HOUR and CURDATE() + INTERVAL 1 DAY)
+              and (pe.createDate between CURDATE() - INTERVAL 1 WEEK and CURDATE() + INTERVAL 1 DAY)
               and u2.floor_id = $floor_id
             order by pe.id");
 }
@@ -970,8 +970,9 @@ function set_time_limit2($json)
         $floor_id = $groups["floor_id"];
         $group_id = $groups["group_id"];
         $timeLimit = isset($groups["time_limit"]) ? $groups["time_limit"] : null;
+        $highlight = $groups["highlight"];
 
-        array_push($sqlStr, "update floor_group set time_limit = '$timeLimit'
+        array_push($sqlStr, "update floor_group set time_limit = '$timeLimit', highlight = $highlight
           where floor_id = $floor_id
             and group_id = $group_id");
 

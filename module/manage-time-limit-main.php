@@ -20,6 +20,10 @@ $floor_groups = get_groups($floor_id, false, false);
         <tr>
             <th>店家id</th>
             <th>店家名稱</th>
+            <th>
+                <input type="checkbox" id="highlight-all" />
+                <label for="highlight-all">醒目提示</label>
+            </th>
             <th style="background-color: tomato">
                 <label for="date-set-all">時限</label>
                 <div id="date-set-all" class="input-daterange input-group date">
@@ -37,6 +41,7 @@ $floor_groups = get_groups($floor_id, false, false);
             <tr data-uid="<?= $group["id"] ?>" class="group">
                 <td class="group_id"><?= $group["id"] ?></td>
                 <td class="group_name"><?= $group["name"] ?></td>
+                <td class="highlight"><input type="checkbox" <?= $group["highlight"] == 1 ? 'checked="true"' : "" ?>></td>
                 <td class="time_limit">
                     <div class="input-daterange input-group date">
                         <input type="text" class="form-control" placeholder="選擇日期"
