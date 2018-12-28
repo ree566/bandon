@@ -17,15 +17,22 @@ $_SESSION["floor_id"] = '5';
 
 $PDO = dbc();
 
-$data = array(5,115,123,127,157,159,201,222,223,235,306,315);
-$data2 = array(5);
-$data3 = array('id' => "'5', '115', '123', '127', '157', '159', '201', '222', '223', '235', '306', '315'");
-$data4 = array('5', '115', '123', '127', '157', '159', '201', '222', '223', '235', '306', '315');
-$data5 = array('5');
-$json = get_checkout_orders($_SESSION["floor_id"], $data);
+$json = array(
+    "orders" => array(
+        array(
+            "paid" => "0",
+            "user_id" => "root",
+            "purse_id" => "173",
+            "order_id" => "52020",
+            "totalPrice" => "170"
+        )
+    ),
+    "groups_checkout" => "5, 7"
+);
+set_checkout_orders($json);
 //$json2 = get_checkout_orders($_SESSION["floor_id"], $data2);
 
-print_r($json);
-print_r('------------------');
+//print_r($json);
+//print_r('------------------');
 //print_r($json2);
 

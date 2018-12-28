@@ -20,7 +20,8 @@ $(function () {
             var group_id = g.attr("data-gid");
 
             var time_limit = g.find(".time-limit").val();
-            if (time_limit != null && time_limit != '') {
+
+            if (time_limit != null && time_limit != '' && time_limit != '0000-00-00 00:00:00') {
                 var time = moment(time_limit);
 
                 g.attr("style", "outline: 5px dashed red;");

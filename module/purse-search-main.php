@@ -11,6 +11,7 @@ $user_id = $_SESSION["uid"];
         <input type="text" class="form-control" placeholder="請輸入工號" id="user_id">
         <input type="text" class="form-control" placeholder="請輸入名字" id="user_name">
         <input type="button" class="btn btn-default submit" value="查詢">
+        <h5 style="color: red">僅顯示3個月內</h5>
     </div>
 
     <table id="searchResult" class="group table text-left sortable table-striped table-hover">

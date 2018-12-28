@@ -5,9 +5,14 @@ include "module/locker.php";
 
 $PDO = dbc();
 $floor_id = $_SESSION["floor_id"];
-$orders = get_checkout_orders($floor_id, $_REQUEST["groups"]);
+$req_g = $_REQUEST["groups"];
+$orders = get_checkout_orders($floor_id, $req_g);
 
 ?>
+
+    <script>
+        var req_g = '<?= implode(',',$req_g) ?>';
+    </script>
 <?php
 if (!isset($_REQUEST["groups"])) {
     header('Location: view.php');
@@ -30,8 +35,6 @@ if (isset($_COOKIE["paid_temp"])) {
     <?php } else { ?>
         <h5>
             <ur style="color: red">
-                <li>金額留空 = 付全額</li>
-                <li>金額為0 = 未付錢</li>
                 <li>備註為選填</li>
             </ur>
         </h5>
@@ -39,15 +42,15 @@ if (isset($_COOKIE["paid_temp"])) {
             <table class="table table-hover">
                 <thead>
                 <tr>
-                    <td data-visible="false">order_id</td>
-                    <td data-visible="false">purse_id</td>
-                    <td data-visible="false">user_id</td>
-                    <td>user_name</td>
-                    <td>createDate</td>
-                    <td>應付金額</td>
-                    <td>實付金額</td>
-                    <td>餘額</td>
-                    <td>備註</td>
+                    <th data-visible="false">order_id</th>
+                    <th data-visible="false">purse_id</th>
+                    <th data-visible="false">user_id</th>
+                    <th>user_name</th>
+                    <th>createDate</th>
+                    <th>應付金額</th>
+                    <th>實付金額</th>
+                    <th>結算後餘額</th>
+                    <th>備註</th>
                 </tr>
                 </thead>
                 <tbody class="order-list">
@@ -62,7 +65,7 @@ if (isset($_COOKIE["paid_temp"])) {
                         <td class="paid"><input type="number" class="order-paid form-control" placeholder="輸入已付金額"
                                                 min="0"
                                                 max="2000"
-                                                value="<?= isset($info['P' . $order["purse_id"]]) ? $info['P' . $order["purse_id"]] : 0 ?>"/>
+                                                value="<?= isset($info['P' . $order["purse_id"]]) ? $info['P' . $order["purse_id"]] : 0 ?>" readonly disabled/>
                         </td>
                         <td class="balance">
                             <input class="origin-balance" type="hidden" value="<?= $order["balance"] ?>">
@@ -79,7 +82,7 @@ if (isset($_COOKIE["paid_temp"])) {
             </p>
             <div class="btn-group">
                 <a href="control.php" class="btn btn-default">返回</a>
-                <button class="btn btn-default submit" type="button">儲存</button>
+                <button class="btn btn-default submit" type="button">確認結算</button>
                 <button class="btn btn-default reset" type="button">Reset</button>
                 <h5 style="color: red">※請務必再三確認完成再送出</h5>
             </div>

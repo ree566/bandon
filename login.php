@@ -75,7 +75,11 @@ if (isset($_SESSION["uid"])) {
             </div>
             <div class="form-group">
                 <button type="submit" class="btn btn-default">登入</button>
-                <small class="btn-text"><a href="document.html">使用手冊</a></small>
+                <small class="btn-text">
+                    <a href="document.html"><b>使用手冊</b></a>
+                    /
+                    <b><a href="newFeatures.html" style="color: red">新功能!</a></b>
+                </small>
             </div>
         </form>
     </div>

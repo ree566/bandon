@@ -217,7 +217,7 @@ function get_orders($user_id = null, $floor_id = null)
         join kinds k on od.kind_id = k.id 
         WHERE ('$user_id' is null or '$user_id' = '' or o.user_id = '$user_id') 
           and ('$floor_id' is null or '$floor_id' = '' or u.floor_id = '$floor_id')
-          and o.processed = 0");
+          and od.processed = 0");
 
 
     foreach ($orders as &$order) {
@@ -336,17 +336,24 @@ function set_orders($json)
         $json["error"] = "Floor's order is not available now";
     } else {
         $orders = $json["orders"];
-//        $re = check_contain_expired_kinds($orders, $user_id, $floor_id);
+
         $re = false;
 
         if ($re == true) {
             $json["state"] = "fail";
             $json["error"] = "Order contain expire items, please refresh page and try again";
         } else {
-            update("delete o from orders o where o.user_id = '$user_id' and processed = 0");
-            update("insert into orders(user_id) values('$user_id') ");
+            $exist_order = get_row("select od.* from orders o join order_detail od on o.id = od.order_id
+              where o.user_id = '$user_id' and od.processed = 0");
+            $order_id = null;
+            if (empty($exist_order)) {
+                update("insert into orders(user_id) values('$user_id') ");
 
-            $order_id = last_id();
+                $order_id = last_id();
+            } else {
+                $order_id = $exist_order["order_id"];
+                update("delete from order_detail where order_id = $order_id");
+            }
 
             $sqlQuery = array();
 
@@ -737,7 +744,7 @@ function get_items_hot($number)
         FROM orders o join order_detail od on o.id = od.order_id
         join kinds k on od.kind_id = k.id join items i on k.item_id = i.id
         join users u on o.user_id = u.id
-        where u.floor_id = $floor_id and o.processed = 0
+        where u.floor_id = $floor_id and od.processed = 0
         GROUP BY i.id ORDER BY count DESC LIMIT $number");
 }
 
@@ -775,7 +782,7 @@ function get_checkout_orders($floor_id, array $group_ids = null)
           join purses p on u.id = p.user_id
           join items i on k.item_id = i.id
         where u.floor_id = $floor_id 
-          and o.processed = 0
+          and od.processed = 0
           and ($g is null or i.group_id in($placeHolder))
         group by o.id, o.user_id, o.createDate, p.id, p.amount
         order by u.id";
@@ -802,32 +809,39 @@ function set_checkout_orders($json)
 {
     $floor_id = (int)$_SESSION["floor_id"];
     $mod_user_id = escape($_SESSION["uid"]);
-
     $sqlStr = array();
-    array_push($sqlStr, "update orders o join users u on o.user_id = u.id
-        set o.processed = 1 and o.lastUpdateDate = now() where u.floor_id = $floor_id");
+
+    $groups_checkout = explode(",", $json["groups_checkout"]);
+    foreach ($groups_checkout as $g_id) {
+        array_push($sqlStr, "delete from floor_group where floor_id = $floor_id and group_id = $g_id");
+
+        //First insert than update processed flag
+        array_push($sqlStr, "insert into purse_event(purse_id, order_id, order_detail_id, amount, remark, mod_user_id)
+            select p.id, o.id, od.id, -(od.number * k.price), '', '$mod_user_id' from orders o join order_detail od on o.id = od.order_id
+            join users u on o.user_id = u.id join kinds k on od.kind_id = k.id
+            join items i on k.item_id = i.id join purses p on u.id = p.user_id
+            where u.floor_id = $floor_id
+            and i.group_id = $g_id
+            and od.processed = 0");
+
+        //Update flag last or insert event action can't get the processed flag
+        array_push($sqlStr, "update order_detail od join kinds k on od.kind_id = k.id 
+            join items i on k.item_id = i.id
+            set od.processed = 1 
+            where i.group_id = $g_id");
+    }
 
     $orders = $json["orders"];
 
     foreach ($orders as &$order) {
         $purse_id = (int)$order["purse_id"];
-        $order_id = (int)$order["order_id"];
         $totalPrice = (int)$order["totalPrice"];
         $paid = (int)$order["paid"];
-        $remark = isset($order["remark"]) ? escape($order["remark"]) : null;
-
-        if ($totalPrice == $paid) {
-            $remark .= "全額付清(" . $totalPrice . ")";
-        } else if ($totalPrice != 0 || $paid != 0) {
-            $remark .= "(需付: " . $totalPrice . " 已付: " . $paid . ")";
-        }
-
         array_push($sqlStr, "update purses set amount = (amount - $totalPrice + $paid) where id = $purse_id");
-        array_push($sqlStr, "insert into purse_event(purse_id, order_id, amount, remark, mod_user_id) 
-            VALUES ($purse_id, $order_id, ($paid - $totalPrice ), '$remark', '$mod_user_id')");
-
     }
 
+
+//    var_dump($sqlStr);
     batchUpdate(...$sqlStr);
 
 }
@@ -845,20 +859,23 @@ function get_purse_event($user_id = null, $user_name = null, $startDate = null, 
         $user_name = '%' . $user_name . '%';
     }
     $floor_id = $_SESSION["floor_id"];
-    return get_rows("select pe.id purse_event_id, pe.purse_id, pe.order_id, pe.amount, pe.remark, u.id mod_user_id, u.name mod_user_name, o.createDate,
-                   concat(i.name,' ',k.name) item_kind, od.number order_number, k.price kind_price, pe.createDate mod_date, u2.id purse_user_id, u2.name purse_user_name
-            from purse_event pe join users u on pe.mod_user_id = u.id
-                                join purses p on pe.purse_id = p.id
-                                join users u2 on p.user_id = u2.id
-                                left join orders o on pe.order_id = o.id
-                                left join order_detail od on o.id = od.order_id
-                                left join kinds k on od.kind_id = k.id
-                                left join items i on k.item_id = i.id
-            where ('$user_id' is null or '$user_id' = '' or u2.id = '$user_id')
-              and ('$user_name' is null or '$user_name' = '' or u2.name like '$user_name')
+    return get_rows("select pe.id purse_event_id, pe.purse_id, pe.order_id, pe.amount, pe.remark, u2.id mod_user_id,
+                       u2.name mod_user_name, o.createDate,
+                       case when i.id is null then null else concat(i.name,' ',k.name) end item_kind, od.number order_number,
+                       k.price kind_price, pe.createDate mod_date, u.id purse_user_id, u.name purse_user_name
+                from purse_event pe join purses p on pe.purse_id = p.id
+                join users u on p.user_id = u.id
+                join users u2 on pe.mod_user_id = u2.id
+                left join order_detail od on pe.order_detail_id = od.id
+                left join orders o on od.order_id = o.id
+                left join kinds k on od.kind_id = k.id
+                left join items i on k.item_id = i.id
+            where ('$user_id' is null or '$user_id' = '' or u.id = '$user_id')
+              and ('$user_name' is null or '$user_name' = '' or u.name like '$user_name')
               and ('$startDate' is null or '$startDate' = '' or pe.createDate between '$startDate' and '$endDate')
-              and (pe.createDate between CURDATE() - INTERVAL 1 WEEK and CURDATE() + INTERVAL 1 DAY)
-              and u2.floor_id = $floor_id");
+              and (pe.createDate between current_timestamp () - INTERVAL 1 HOUR and CURDATE() + INTERVAL 1 DAY)
+              and u2.floor_id = $floor_id
+            order by pe.id");
 }
 
 function get_purses($floor_id = null)

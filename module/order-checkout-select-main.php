@@ -23,10 +23,13 @@ $groups = get_groups($floor_id, null, null);
             <table class="table table-hover">
                 <thead>
                 <tr>
-                    <td>id</td>
-                    <td>name</td>
-                    <td>時限</td>
-                    <td><input type="checkbox" id="check-all" class="form-control"/></td>
+                    <th>店家id</th>
+                    <th>店家名稱</th>
+                    <th>店家時限</th>
+                    <th>
+                        <input type="checkbox" id="check-all" />
+                        <label for="check-all">全選</label>
+                    </th>
                 </tr>
                 </thead>
                 <tbody class="group-list">
@@ -35,7 +38,7 @@ $groups = get_groups($floor_id, null, null);
                         <td class="group_id"><?= $group["id"] ?></td>
                         <td class="name"><?= $group["name"] ?></td>
                         <td class="time_limit"><?= $group["time_limit"] == 0 ? "無時限" : $group["time_limit"] ?></td>
-                        <td class="remark"><input type="checkbox" class="group-check form-control"
+                        <td class="remark"><input type="checkbox" class="group-check "
                                                   value="<?= $group["id"] ?>"/></td>
                     </tr>
                 <?php } ?>

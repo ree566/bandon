@@ -18,9 +18,18 @@ $floor_groups = get_groups($floor_id, false, false);
     <table class="table table-hover">
         <thead>
         <tr>
-            <td>店家id</td>
-            <td>店家名稱</td>
-            <td>時限</td>
+            <th>店家id</th>
+            <th>店家名稱</th>
+            <th style="background-color: tomato">
+                <label for="date-set-all">時限</label>
+                <div id="date-set-all" class="input-daterange input-group date">
+                    <input type="text" class="form-control" placeholder="設定全部"
+                           value="<?= isset($group["time_limit"]) ? $group["time_limit"] : null ?>" />
+                    <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-calendar"></span>
+                        </span>
+                </div>
+            </th>
         </tr>
         </thead>
         <tbody class="group-list">
@@ -30,8 +39,8 @@ $floor_groups = get_groups($floor_id, false, false);
                 <td class="group_name"><?= $group["name"] ?></td>
                 <td class="time_limit">
                     <div class="input-daterange input-group date">
-                        <input type="text" class="form-control"
-                               value="<?= isset($group["time_limit"]) ? $group["time_limit"] : null ?>"/>
+                        <input type="text" class="form-control" placeholder="選擇日期"
+                               value="<?= isset($group["time_limit"]) ? $group["time_limit"] : null ?>" />
                         <span class="input-group-addon">
                             <span class="glyphicon glyphicon-calendar"></span>
                         </span>

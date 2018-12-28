@@ -29,7 +29,7 @@ $purse_event = get_purse_event($user_id);
                 <tr data-uid="<?= $event["purse_event_id"] ?>" class="purse">
                     <td><?= $event["purse_event_id"] ?></td>
                     <td><?= $event["item_kind"] . "x" . $event["order_number"] ?></td>
-                    <td><?= ($event["amount"] > 0 ? "+" : "") . $event["amount"] ?></td>
+                    <td><?= isset($event["kind_price"]) ? -($event["kind_price"] * $event["order_number"]) : (($event["amount"] > 0 ? "+" : "") . $event["amount"]) ?></td>
                     <td><?= isset($event["createDate"]) ? date('Y-m-d', strtotime($event["createDate"])) : 'n/a' ?></td>
                     <td><?= $event["mod_user_name"] ?></td>
                     <td><?= date('Y-m-d', strtotime($event["mod_date"])) ?></td>
