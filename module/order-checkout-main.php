@@ -73,7 +73,8 @@ if (isset($_COOKIE["paid_temp"])) {
                                 <?= isset($info['P' . $order["purse_id"]]) ? $order["balance"] - $order["totalPrice"] + $info['P' . $order["purse_id"]] : $order["balance"] ?>
                             </div>
                         </td>
-                        <td class="remark"><input type="text" class="order-remark form-control" placeholder="輸入備註"/>
+                        <td class="remark">
+                            <input type="text" class="order-remark form-control" placeholder="輸入備註" disabled="true"/>
                         </td>
                     </tr>
                 <?php } ?>

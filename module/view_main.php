@@ -10,7 +10,7 @@ $purse = get_purse($user_id);
 <script>
     //Param for low-purse-lock.js
     var amount = <?= $purse["amount"] ?>;
-    var purse_min_allow = <?= $purse_min_allow ?>;
+    var purse_min_allow = <?= $order_limit_purse_amount ?>;
     var user_id = '<?= $user_id ?>';
     var floor_id = '<?= $_SESSION["floor_id"] ?>';
 </script>
