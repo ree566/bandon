@@ -211,7 +211,7 @@ function get_orders($user_id = null, $floor_id = null)
         $floor_id = (int)$floor_id;
     }
 
-    $orders = get_rows("select o.id, o.user_id, o.createDate, od.option_ids, od.kind_id, od.number, u.floor_id, k.item_id 
+    $orders = get_rows("select o.id, o.user_id, o.createDate, od.option_ids, od.kind_id, od.`number`, u.floor_id, k.item_id 
         from orders o join order_detail od on o.id = od.order_id 
         join users u on o.user_id = u.id 
         join kinds k on od.kind_id = k.id 
@@ -398,7 +398,7 @@ function set_orders($json)
                 $option_ids = escape(implode(",", $option_ids));
 
                 //Add query add batch update in one transaction
-                array_push($sqlQuery, "INSERT INTO order_detail (order_id, kind_id, option_ids, number) VALUES ($order_id, $kind_id, '$option_ids', $number)");
+                array_push($sqlQuery, "INSERT INTO order_detail (order_id, kind_id, option_ids, `number`) VALUES ($order_id, $kind_id, '$option_ids', $number)");
             }
             batchUpdate(...$sqlQuery);
 
@@ -740,7 +740,7 @@ function get_items_hot($number)
 {
     $number = (int)$number;
     $floor_id = (int)$_SESSION["floor_id"];
-    return get_rows("SELECT i.name, i.id, SUM(od.number) AS `count`
+    return get_rows("SELECT i.name, i.id, SUM(od.`number`) AS `count`
         FROM orders o join order_detail od on o.id = od.order_id
         join kinds k on od.kind_id = k.id join items i on k.item_id = i.id
         join users u on o.user_id = u.id
@@ -775,7 +775,7 @@ function get_checkout_orders($floor_id, array $group_ids = null)
         $g = 1;
     }
 
-    $q = "select o.id order_id, o.user_id, u.name user_name, createDate, sum(od.number * k.price) totalPrice, p.id purse_id, p.amount balance 
+    $q = "select o.id order_id, o.user_id, u.name user_name, createDate, sum(od.`number` * k.price) totalPrice, p.id purse_id, p.amount balance 
         from orders o join order_detail od on o.id = od.order_id
           join kinds k on od.kind_id = k.id 
           join users u on o.user_id = u.id 
@@ -813,11 +813,13 @@ function set_checkout_orders($json)
 
     $groups_checkout = explode(",", $json["groups_checkout"]);
     foreach ($groups_checkout as $g_id) {
+
         array_push($sqlStr, "delete from floor_group where floor_id = $floor_id and group_id = $g_id");
 
         //First insert than update processed flag
-        array_push($sqlStr, "insert into purse_event(purse_id, order_id, order_detail_id, amount, remark, mod_user_id)
-            select p.id, o.id, od.id, -(od.number * k.price), '', '$mod_user_id' from orders o join order_detail od on o.id = od.order_id
+        array_push($sqlStr, "insert into purse_event(purse_id, order_detail_id, amount, remark, mod_user_id, purse_amount_temp)
+            select p.id, od.id, -(od.`number` * k.price), '', '$mod_user_id', p.amount
+            from orders o join order_detail od on o.id = od.order_id
             join users u on o.user_id = u.id join kinds k on od.kind_id = k.id
             join items i on k.item_id = i.id join purses p on u.id = p.user_id
             where u.floor_id = $floor_id
@@ -841,7 +843,7 @@ function set_checkout_orders($json)
     }
 
 
-//    var_dump($sqlStr);
+    //var_dump($sqlStr);
     batchUpdate(...$sqlStr);
 
 }
@@ -859,10 +861,11 @@ function get_purse_event($user_id = null, $user_name = null, $startDate = null, 
         $user_name = '%' . $user_name . '%';
     }
     $floor_id = $_SESSION["floor_id"];
-    return get_rows("select pe.id purse_event_id, pe.purse_id, pe.order_id, pe.amount, pe.remark, u2.id mod_user_id,
+    $lockWeek = ($_SESSION["permission"] >= 2 ? 8 : 1);
+    return get_rows("select pe.id purse_event_id, pe.purse_id, od.order_id, pe.amount, pe.remark, u2.id mod_user_id,
                        u2.name mod_user_name, o.createDate,
-                       case when i.id is null then null else concat(i.name,' ',k.name) end item_kind, od.number order_number,
-                       k.price kind_price, pe.createDate mod_date, u.id purse_user_id, u.name purse_user_name
+                       case when i.id is null then null else concat(i.name,' ',k.name) end item_kind, od.`number` order_number,
+                       k.price kind_price, pe.createDate mod_date, u.id purse_user_id, u.name purse_user_name, pe.purse_amount_temp
                 from purse_event pe join purses p on pe.purse_id = p.id
                 join users u on p.user_id = u.id
                 join users u2 on pe.mod_user_id = u2.id
@@ -873,7 +876,7 @@ function get_purse_event($user_id = null, $user_name = null, $startDate = null, 
             where ('$user_id' is null or '$user_id' = '' or u.id = '$user_id')
               and ('$user_name' is null or '$user_name' = '' or u.name like '$user_name')
               and ('$startDate' is null or '$startDate' = '' or pe.createDate between '$startDate' and '$endDate')
-              and (pe.createDate between CURDATE() - INTERVAL 1 WEEK and CURDATE() + INTERVAL 1 DAY)
+              and (pe.createDate between CURDATE() - INTERVAL $lockWeek WEEK and CURDATE() + INTERVAL 1 DAY)
               and u2.floor_id = $floor_id
             order by pe.id");
 }
@@ -924,7 +927,7 @@ function set_purses($json)
         }
 
         array_push($sqlStr,
-            "insert into purse_event(purse_id, order_id, amount, remark, mod_user_id) values ($purse_id, null, $adjust, '$comment', '$mod_user_id')");
+            "insert into purse_event(purse_id, amount, remark, mod_user_id, purse_amount_temp) values ($purse_id, $adjust, '$comment', '$mod_user_id', $amount)");
 
         array_push($sqlStr,
             "update purses set amount = amount + $adjust where id = $purse_id");
